@@ -176,9 +176,7 @@ class ErrorTrackerManager implements ExceptionRecorder
             return null;
         }
 
-        $request = app('request');
-
-        return $request instanceof Request ? $request : null;
+        return app('request');
     }
 
     protected function extractHeaders(?Request $request): ?array
@@ -210,14 +208,12 @@ class ErrorTrackerManager implements ExceptionRecorder
             ];
         }
 
+        $authIdentifier = (string) $user->getAuthIdentifier();
+
         return [
-            'user_id' => method_exists($user, 'getAuthIdentifier')
-                ? (string) $user->getAuthIdentifier()
-                : null,
+            'user_id' => $authIdentifier,
             'user_type' => $user::class,
-            'user_label' => $user->email
-                ?? $user->name
-                ?? (method_exists($user, 'getAuthIdentifier') ? (string) $user->getAuthIdentifier() : null),
+            'user_label' => $user->email ?? $user->name ?? $authIdentifier,
         ];
     }
 

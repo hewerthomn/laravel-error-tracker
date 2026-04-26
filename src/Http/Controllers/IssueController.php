@@ -24,7 +24,10 @@ class IssueController extends Controller
                 ->orderBy('bucket_start'),
         ]);
 
-        return view('error-tracker::dashboard.issue-show', [
+        /** @var view-string $view */
+        $view = 'error-tracker::dashboard.issue-show';
+
+        return view($view, [
             'issue' => $issue,
             'trendLabels' => $issue->trends->pluck('bucket_start')->map(
                 fn ($date) => $date->format('d/m H:i')

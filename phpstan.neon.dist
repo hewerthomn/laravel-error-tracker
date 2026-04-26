@@ -1,8 +1,10 @@
 includes:
     - vendor/larastan/larastan/extension.neon
-    - phpstan-baseline.neon
 
 parameters:
+    scanFiles:
+        - phpstan-stubs/slack-message.stub
+
     paths:
         - src
         - config
@@ -10,3 +12,8 @@ parameters:
         - tests
 
     level: 5
+
+    ignoreErrors:
+        -
+            identifier: larastan.noEnvCallsOutsideOfConfig
+            path: config/error-tracker.php

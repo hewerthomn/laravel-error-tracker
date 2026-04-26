@@ -2,6 +2,7 @@
 
 use Hewerthomn\ErrorTracker\Actions\RecordThrowableAction;
 use Hewerthomn\ErrorTracker\Models\Feedback;
+use Hewerthomn\ErrorTracker\Tests\TestCase;
 
 it('stores feedback for an event using the feedback token', function () {
     config()->set('error-tracker.feedback.enabled', true);
@@ -14,6 +15,7 @@ it('stores feedback for an event using the feedback token', function () {
     expect($result)->not->toBeNull()
         ->and($result->event->feedback_token)->not->toBeEmpty();
 
+    /** @var TestCase $this */
     $response = $this->post(
         route('error-tracker.feedback.store', $result->event->feedback_token),
         [

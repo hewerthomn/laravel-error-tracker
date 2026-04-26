@@ -110,6 +110,10 @@ class PruneCommand extends Command
                     ->latest('id')
                     ->first();
 
+                if (! $lastEvent) {
+                    return;
+                }
+
                 $affectedUsers = (clone $eventsQuery)
                     ->whereNotNull('user_id')
                     ->distinct()
@@ -120,10 +124,10 @@ class PruneCommand extends Command
                     'last_seen_at' => $lastSeenAt,
                     'total_events' => $totalEvents,
                     'affected_users' => $affectedUsers,
-                    'last_event_id' => $lastEvent?->id,
-                    'message_sample' => $lastEvent?->message,
-                    'level' => $lastEvent?->level ?? $issue->level,
-                    'exception_class' => $lastEvent?->exception_class ?? $issue->exception_class,
+                    'last_event_id' => $lastEvent->id,
+                    'message_sample' => $lastEvent->message,
+                    'level' => $lastEvent->level ?? $issue->level,
+                    'exception_class' => $lastEvent->exception_class ?? $issue->exception_class,
                 ])->save();
             });
     }

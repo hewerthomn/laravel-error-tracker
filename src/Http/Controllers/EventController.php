@@ -11,7 +11,10 @@ class EventController extends Controller
     {
         $event->load(['issue', 'feedback']);
 
-        return view('error-tracker::dashboard.event-show', [
+        /** @var view-string $view */
+        $view = 'error-tracker::dashboard.event-show';
+
+        return view($view, [
             'event' => $event,
         ]);
     }

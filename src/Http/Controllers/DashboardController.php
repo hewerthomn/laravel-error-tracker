@@ -37,7 +37,10 @@ class DashboardController extends Controller
 
         $hasMultipleEnvironments = $environmentOptions->count() > 1;
 
-        return view('error-tracker::dashboard.index', [
+        /** @var view-string $view */
+        $view = 'error-tracker::dashboard.index';
+
+        return view($view, [
             'appName' => config('app.name'),
             'issues' => $issues,
             'filters' => [

@@ -1,0 +1,10 @@
+<?php
+
+namespace Illuminate\Notifications\Slack;
+
+class SlackMessage
+{
+    public function text(string $text): self {}
+
+    public function sectionBlock(callable $callback): self {}
+}
