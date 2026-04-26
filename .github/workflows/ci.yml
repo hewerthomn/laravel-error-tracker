@@ -83,3 +83,30 @@ jobs:
 
       - name: Run Pest
         run: vendor/bin/pest
+
+  analyse:
+    name: PHPStan
+    runs-on: ubuntu-latest
+
+    env:
+      COMPOSER_ROOT_VERSION: dev-main
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate Composer
+        run: composer validate --strict
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --memory-limit=1G

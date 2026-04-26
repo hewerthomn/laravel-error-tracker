@@ -10,6 +10,7 @@
         "spatie/laravel-package-tools": "^1.0"
     },
     "require-dev": {
+        "larastan/larastan": "^3.0",
         "laravel/pint": "^1.0",
         "orchestra/testbench": "^9.0|^10.0|^11.0",
         "pestphp/pest": "^3.0"
@@ -37,7 +38,9 @@
         "test": "vendor/bin/pest",
         "test:phpunit": "vendor/bin/phpunit",
         "format": "vendor/bin/pint",
-        "format:test": "vendor/bin/pint --test"
+        "format:test": "vendor/bin/pint --test",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
+        "analyse:baseline": "vendor/bin/phpstan analyse --generate-baseline --memory-limit=1G"
     },
     "config": {
         "allow-plugins": {

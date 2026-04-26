@@ -1,5 +1,8 @@
 # Laravel Error Tracker
 
+[![CI](https://github.com/hewerthomn/laravel-error-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/hewerthomn/laravel-error-tracker/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/hewerthomn/laravel-error-tracker)](LICENSE)
+
 A Laravel-first error tracking package with a built-in dashboard, local persistence, issue grouping, notifications, a custom production error page, and optional end-user feedback.
 
 ## Features
@@ -240,6 +243,24 @@ php artisan error-tracker:prune --dry-run
 
 ## Development
 
+Run the test suite:
+
+```bash
+composer test
+```
+
+Check formatting:
+
+```bash
+composer format:test
+```
+
+Run static analysis:
+
+```bash
+composer analyse
+```
+
 ### Code Style
 
 Laravel Pint is the recommended formatter for this package.
@@ -247,37 +268,13 @@ Laravel Pint is the recommended formatter for this package.
 Run Pint:
 
 ```bash
-vendor/bin/pint
+composer format
 ```
 
 Check formatting without modifying files:
 
 ```bash
-vendor/bin/pint --test
-```
-
-Suggested Composer scripts:
-
-```json
-"scripts": {
-  "test": "vendor/bin/phpunit",
-  "format": "vendor/bin/pint",
-  "format:test": "vendor/bin/pint --test"
-}
-```
-
-### Tests
-
-Run tests with:
-
-```bash
-vendor/bin/phpunit
-```
-
-Or:
-
-```bash
-composer test
+composer format:test
 ```
 
 ## Local Sandbox
@@ -296,6 +293,18 @@ Planned improvements after the MVP:
 * JavaScript error capture
 * Breadcrumbs
 * Webhooks
+
+## Changelog
+
+Please see [CHANGELOG.md](CHANGELOG.md) for more information about notable changes.
+
+## Contributing
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and pull request guidelines.
+
+## Security Vulnerabilities
+
+Please review [SECURITY.md](SECURITY.md) for supported versions, vulnerability reporting, and sensitive data guidance.
 
 ## License
 

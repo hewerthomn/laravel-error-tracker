@@ -40,6 +40,8 @@ function makeUserNotFoundException(int $id): Throwable
     } catch (Throwable $e) {
         return $e;
     }
+
+    throw new RuntimeException('Unable to create test exception.');
 }
 
 function throwFromStableLocation(int $id): void
