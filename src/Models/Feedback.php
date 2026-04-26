@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $event_id
  * @property string $feedback_token
+ * @property string|null $user_id
  * @property string|null $name
  * @property string|null $email
  * @property string $message

@@ -29,6 +29,7 @@ class ErrorTrackerServiceProvider extends PackageServiceProvider
             ->hasMigration('create_error_tracker_events_table')
             ->hasMigration('create_error_tracker_issue_trends_table')
             ->hasMigration('create_error_tracker_feedback_table')
+            ->hasMigration('add_user_id_to_error_tracker_feedback_table')
             ->hasCommand(PruneCommand::class)
             ->hasInstallCommand(function ($command) {
                 $command

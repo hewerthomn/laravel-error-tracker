@@ -6,14 +6,15 @@
     <title>{{ $title ?? 'Something went wrong' }}</title>
     <style>
         :root {
-            --bg: #f8fafc;
-            --card: #ffffff;
+            --bg: #f6f7f9;
+            --panel: #ffffff;
             --border: #e2e8f0;
-            --text: #0f172a;
-            --muted: #64748b;
-            --danger: #dc2626;
-            --primary: #2563eb;
-            --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+            --text: #111827;
+            --muted: #6b7280;
+            --danger: #b91c1c;
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --surface: #f9fafb;
         }
 
         * {
@@ -28,33 +29,52 @@
         }
 
         .wrapper {
-            max-width: 760px;
-            margin: 48px auto;
-            padding: 24px;
+            max-width: 680px;
+            margin: 40px auto;
+            padding: 20px;
         }
 
-        .card {
-            background: var(--card);
+        .panel {
+            background: var(--panel);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: var(--shadow);
+            border-radius: 8px;
+            padding: 22px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            line-height: 1.2;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 17px;
+            line-height: 1.3;
         }
 
         .muted {
             color: var(--muted);
+            line-height: 1.55;
         }
 
         .reference {
             margin-top: 16px;
             padding: 12px 14px;
-            border-radius: 12px;
-            background: #f1f5f9;
+            border-radius: 8px;
+            background: var(--surface);
             border: 1px solid var(--border);
             font-size: 14px;
         }
 
         .form-group {
+            margin-top: 14px;
+        }
+
+        .identity-grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             margin-top: 16px;
         }
 
@@ -66,15 +86,15 @@
 
         input, textarea, button {
             width: 100%;
-            padding: 12px 14px;
-            border-radius: 12px;
+            padding: 11px 12px;
+            border-radius: 8px;
             border: 1px solid #cbd5e1;
             font: inherit;
             background: #fff;
         }
 
         input[readonly] {
-            background: #f1f5f9;
+            background: var(--surface);
             color: var(--muted);
             cursor: not-allowed;
         }
@@ -86,7 +106,7 @@
         }
 
         textarea {
-            min-height: 140px;
+            min-height: 132px;
             resize: vertical;
         }
 
@@ -99,14 +119,14 @@
         }
 
         button:hover {
-            background: #1d4ed8;
-            border-color: #1d4ed8;
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
         }
 
         .errors {
             margin-top: 16px;
             padding: 12px 14px;
-            border-radius: 12px;
+            border-radius: 8px;
             background: #fef2f2;
             color: var(--danger);
             border: 1px solid #fecaca;
@@ -114,13 +134,30 @@
 
         .spacer {
             margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        @media (max-width: 640px) {
+            .wrapper {
+                margin: 20px auto;
+                padding: 14px;
+            }
+
+            .panel {
+                padding: 18px;
+            }
+
+            .identity-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="wrapper">
-        <div class="card">
-            <h1 style="margin-top: 0;">{{ $title }}</h1>
+        <main class="panel">
+            <h1>{{ $title }}</h1>
             <p class="muted">{{ $message }}</p>
 
             @if (!empty($showReference) && !empty($reference))
@@ -131,9 +168,9 @@
 
             @if (!empty($showFeedbackForm))
                 <div class="spacer">
-                    <h2 style="margin-bottom: 8px;">Help us understand what happened</h2>
+                    <h2>Help us understand what happened</h2>
                     <p class="muted" style="margin-top: 0;">
-                        You can send extra context about what you were doing when this error happened.
+                        Share what you were doing before the error. This is attached to the error reference above.
                     </p>
 
                     @if (!empty($feedbackErrors) && $feedbackErrors->any())
@@ -156,35 +193,39 @@
                             $emailValue = $feedbackEmail ?? data_get($oldInput ?? [], 'email', '');
                         @endphp
 
-                        @if (!empty($collectName))
-                            <div class="form-group">
-                                <label for="name">Name</label>
-                                <input
-                                    id="name"
-                                    type="text"
-                                    name="name"
-                                    value="{{ $nameValue }}"
-                                    @readonly(!empty($lockAuthenticatedUserFields))
-                                >
-                            </div>
-                        @endif
+                        <div class="identity-grid">
+                            @if (!empty($collectName))
+                                <div>
+                                    <label for="name">Name</label>
+                                    <input
+                                        id="name"
+                                        type="text"
+                                        name="name"
+                                        value="{{ $nameValue }}"
+                                        autocomplete="name"
+                                        @readonly(!empty($isFeedbackUserAuthenticated))
+                                    >
+                                </div>
+                            @endif
 
-                        @if (!empty($collectEmail))
-                            <div class="form-group">
-                                <label for="email">Email</label>
-                                <input
-                                    id="email"
-                                    type="email"
-                                    name="email"
-                                    value="{{ $emailValue }}"
-                                    @readonly(!empty($lockAuthenticatedUserFields))
-                                >
-                            </div>
-                        @endif
+                            @if (!empty($collectEmail))
+                                <div>
+                                    <label for="email">Email</label>
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        name="email"
+                                        value="{{ $emailValue }}"
+                                        autocomplete="email"
+                                        @readonly(!empty($isFeedbackUserAuthenticated))
+                                    >
+                                </div>
+                            @endif
+                        </div>
 
                         @if (!empty($isFeedbackUserAuthenticated))
                             <div class="form-note">
-                                Signed-in user information is attached automatically.
+                                Signed-in user information is attached automatically and cannot be changed here.
                             </div>
                         @endif
 
@@ -194,6 +235,7 @@
                                 id="message"
                                 name="message"
                                 required
+                                maxlength="{{ (int) config('error-tracker.feedback.max_length', 5000) }}"
                             >{{ data_get($oldInput ?? [], 'message', '') }}</textarea>
                         </div>
 
@@ -203,7 +245,7 @@
                     </form>
                 </div>
             @endif
-        </div>
+        </main>
     </div>
 </body>
 </html>

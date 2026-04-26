@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        if (Schema::hasColumn('error_tracker_feedback', 'user_id')) {
+            return;
+        }
+
+        Schema::table('error_tracker_feedback', function (Blueprint $table) {
+            $table->string('user_id', 191)->nullable()->index()->after('feedback_token');
+        });
+    }
+
+    public function down(): void
+    {
+        if (! Schema::hasColumn('error_tracker_feedback', 'user_id')) {
+            return;
+        }
+
+        Schema::table('error_tracker_feedback', function (Blueprint $table) {
+            $table->dropColumn('user_id');
+        });
+    }
+};

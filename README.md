@@ -122,27 +122,24 @@ return Application::configure(basePath: dirname(__DIR__))
             $result = app(ErrorPageState::class)->get();
             $event = $result?->event;
             $issue = $result?->issue;
+            $user = $request->user();
 
             $showFeedbackForm =
                 config('error-tracker.feedback.enabled', false) &&
                 $event?->feedback_token &&
                 (
+                    $user ||
+                    config('error-tracker.feedback.allow_guest', true)
+                ) &&
+                (
                     ! config('error-tracker.feedback.only_production', false) ||
                     app()->environment('production')
                 );
 
-            $user = $request->user();
-            $prefillAuthenticatedUser = config('error-tracker.feedback.prefill_authenticated_user', true);
-            $feedbackName = $prefillAuthenticatedUser && $user
-                ? data_get($user, 'name')
-                : null;
-            $feedbackEmail = $prefillAuthenticatedUser && $user
-                ? data_get($user, 'email')
-                : null;
+            $feedbackName = $user ? data_get($user, 'name') : null;
+            $feedbackEmail = $user ? data_get($user, 'email') : null;
             $isFeedbackUserAuthenticated = (bool) $user;
-            $lockAuthenticatedUserFields =
-                $isFeedbackUserAuthenticated &&
-                config('error-tracker.feedback.lock_authenticated_user_fields', true);
+            $lockAuthenticatedUserFields = $isFeedbackUserAuthenticated;
 
             return response()->view('error-tracker::error.exception', [
                 'title' => config('error-tracker.error_page.title', 'Something went wrong'),
@@ -240,9 +237,9 @@ When enabled, the package can render a custom HTML error page only when:
 
 The optional feedback form is linked to the recorded event through `feedback_token`, so the feedback is associated with the issue occurrence that triggered the page.
 
-Guest users can fill in name and email fields when those fields are enabled. Authenticated users can have name and email prefilled from their signed-in account by enabling `feedback.prefill_authenticated_user`.
+The MVP feedback UI is Blade with lightweight Tailwind and Alpine.js usage, without Livewire.
 
-When `feedback.lock_authenticated_user_fields` is enabled, authenticated users see the name and email fields as readonly in the error page UI. This is only a usability hint: the backend always uses the authenticated user as the source of truth when available and ignores submitted name/email values for signed-in users.
+Guest users can fill in name and email fields when guest feedback is allowed and those fields are enabled. Authenticated users see name and email prefilled from their signed-in account as readonly fields. This is only a usability hint: the backend always uses `request()->user()` as the source of truth when available and ignores submitted name/email values for signed-in users.
 
 ## Available Commands
 

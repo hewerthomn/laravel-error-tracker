@@ -372,6 +372,11 @@
                                 <span class="field-label">Email</span>
                                 <div>{{ $event->feedback->email ?: '—' }}</div>
                             </div>
+
+                            <div class="field-group" style="margin-top: 12px;">
+                                <span class="field-label">User ID</span>
+                                <div>{{ $event->feedback->user_id ?: '—' }}</div>
+                            </div>
                         </div>
 
                         <div class="panel-soft">

@@ -16,6 +16,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->string('feedback_token', 191)->index();
+            $table->string('user_id', 191)->nullable()->index();
 
             $table->string('name')->nullable();
             $table->string('email')->nullable();

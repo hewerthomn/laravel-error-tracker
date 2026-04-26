@@ -189,9 +189,9 @@ return [
         'rate_limit' => '5,1',
         'collect_name' => true,
         'collect_email' => true,
-        // When true, the feedback form uses the authenticated user's name/email as default values when available.
+        // Authenticated feedback always uses request()->user() for name/email when available.
         'prefill_authenticated_user' => true,
-        // When true, authenticated users see name/email as readonly fields. This is only a UI hint; the backend still trusts request()->user() over submitted values.
+        // Kept for compatibility; authenticated identity fields are rendered readonly in the MVP UI.
         'lock_authenticated_user_fields' => true,
         'max_length' => 5000,
     ],

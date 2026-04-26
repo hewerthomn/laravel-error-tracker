@@ -80,7 +80,7 @@ class FeedbackController extends Controller
         $input = $request->all();
         $user = $request->user();
 
-        if ($user && config('error-tracker.feedback.prefill_authenticated_user', true)) {
+        if ($user) {
             $input['name'] = data_get($user, 'name');
             $input['email'] = data_get($user, 'email');
         }
@@ -91,17 +91,15 @@ class FeedbackController extends Controller
     protected function feedbackUserViewData(Request $request): array
     {
         $user = $request->user();
-        $prefillAuthenticatedUser = config('error-tracker.feedback.prefill_authenticated_user', true);
         $isFeedbackUserAuthenticated = (bool) $user;
 
         return [
             'feedbackUser' => $user,
             'authenticatedUser' => $user,
-            'feedbackName' => $prefillAuthenticatedUser && $user ? data_get($user, 'name') : null,
-            'feedbackEmail' => $prefillAuthenticatedUser && $user ? data_get($user, 'email') : null,
+            'feedbackName' => $user ? data_get($user, 'name') : null,
+            'feedbackEmail' => $user ? data_get($user, 'email') : null,
             'isFeedbackUserAuthenticated' => $isFeedbackUserAuthenticated,
-            'lockAuthenticatedUserFields' => $isFeedbackUserAuthenticated
-                && config('error-tracker.feedback.lock_authenticated_user_fields', true),
+            'lockAuthenticatedUserFields' => $isFeedbackUserAuthenticated,
         ];
     }
 }
