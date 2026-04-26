@@ -26,6 +26,12 @@ class FeedbackService
     public function submit(string $token, array $data, Request $request): Feedback
     {
         $event = $this->findEventByToken($token);
+        $user = $request->user();
+
+        if ($user && config('error-tracker.feedback.prefill_authenticated_user', true)) {
+            $data['name'] = data_get($user, 'name');
+            $data['email'] = data_get($user, 'email');
+        }
 
         return Feedback::query()->updateOrCreate(
             ['event_id' => $event->id],

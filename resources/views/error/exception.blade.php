@@ -73,6 +73,18 @@
             background: #fff;
         }
 
+        input[readonly] {
+            background: #f1f5f9;
+            color: var(--muted);
+            cursor: not-allowed;
+        }
+
+        .form-note {
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
         textarea {
             min-height: 140px;
             resize: vertical;
@@ -139,6 +151,11 @@
 
                         <input type="hidden" name="page_url" value="{{ $pageUrl ?? request()->fullUrl() }}">
 
+                        @php
+                            $nameValue = $feedbackName ?? data_get($oldInput ?? [], 'name', '');
+                            $emailValue = $feedbackEmail ?? data_get($oldInput ?? [], 'email', '');
+                        @endphp
+
                         @if (!empty($collectName))
                             <div class="form-group">
                                 <label for="name">Name</label>
@@ -146,7 +163,8 @@
                                     id="name"
                                     type="text"
                                     name="name"
-                                    value="{{ data_get($oldInput ?? [], 'name', '') }}"
+                                    value="{{ $nameValue }}"
+                                    @readonly(!empty($lockAuthenticatedUserFields))
                                 >
                             </div>
                         @endif
@@ -158,8 +176,15 @@
                                     id="email"
                                     type="email"
                                     name="email"
-                                    value="{{ data_get($oldInput ?? [], 'email', '') }}"
+                                    value="{{ $emailValue }}"
+                                    @readonly(!empty($lockAuthenticatedUserFields))
                                 >
+                            </div>
+                        @endif
+
+                        @if (!empty($isFeedbackUserAuthenticated))
+                            <div class="form-note">
+                                Signed-in user information is attached automatically.
                             </div>
                         @endif
 

@@ -189,6 +189,10 @@ return [
         'rate_limit' => '5,1',
         'collect_name' => true,
         'collect_email' => true,
+        // When true, the feedback form uses the authenticated user's name/email as default values when available.
+        'prefill_authenticated_user' => true,
+        // When true, authenticated users see name/email as readonly fields. This is only a UI hint; the backend still trusts request()->user() over submitted values.
+        'lock_authenticated_user_fields' => true,
         'max_length' => 5000,
     ],
 
