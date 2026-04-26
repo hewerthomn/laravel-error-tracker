@@ -184,7 +184,7 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="tabs-container">
         <div class="tabs-shell">
             <div class="tabs-nav" data-tabs-nav>
                 <button type="button" class="tab-button is-active" data-tab-target="event-overview">Overview</button>
@@ -197,7 +197,8 @@
                 @endif
             </div>
 
-            <div id="event-overview" class="tab-panel is-active">
+            <div class="tabs-content">
+                <div id="event-overview" class="tab-panel is-active">
                 <div class="stack">
                     <div class="card" style="margin-bottom: 0;">
                         <div class="card-header">
@@ -285,9 +286,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+                </div>
 
-            <div id="event-stack" class="tab-panel">
+                <div id="event-stack" class="tab-panel">
                 @if (count($traceFrames) > 0)
                     <div class="stack">
                         @foreach ($traceFrames as $index => $frame)
@@ -324,9 +325,9 @@
                 @else
                     <div class="kv-empty">No stack trace frames available.</div>
                 @endif
-            </div>
+                </div>
 
-            <div id="event-headers" class="tab-panel">
+                <div id="event-headers" class="tab-panel">
                 <div class="json-toggle-row">
                     <button type="button" class="btn btn-outline btn-sm" data-json-toggle="headers">
                         Show raw JSON
@@ -340,9 +341,9 @@
                 <div id="headers-raw" class="raw-json-block">
                     <pre>{{ $prettyHeadersJson }}</pre>
                 </div>
-            </div>
+                </div>
 
-            <div id="event-context" class="tab-panel">
+                <div id="event-context" class="tab-panel">
                 <div class="json-toggle-row">
                     <button type="button" class="btn btn-outline btn-sm" data-json-toggle="context">
                         Show raw JSON
@@ -356,7 +357,7 @@
                 <div id="context-raw" class="raw-json-block">
                     <pre>{{ $prettyContextJson }}</pre>
                 </div>
-            </div>
+                </div>
 
             @if ($event->feedback)
                 <div id="event-feedback" class="tab-panel">
@@ -382,6 +383,7 @@
                     </div>
                 </div>
             @endif
+            </div>
         </div>
     </div>
 

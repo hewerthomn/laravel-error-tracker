@@ -116,7 +116,6 @@
                         <th>Source</th>
                         <th>User</th>
                         <th>Occurred at</th>
-                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -136,14 +135,17 @@
 
                         <tr>
                             <td>
-                                <div class="table-cell-stack">
-                                    <div class="table-cell-title">Event #{{ $event->id }}</div>
-
+                                <div class="event-primary-line">
+                                    <a href="{{ route('error-tracker.events.show', $event) }}" class="event-link">
+                                        Event #{{ $event->id }}
+                                    </a>
                                     <div class="table-cell-badges">
                                         <span class="badge {{ $eventLevelBadgeClass }}">{{ $event->level }}</span>
                                     </div>
+                                </div>
 
-                                    <div class="mono-inline">{{ $event->uuid }}</div>
+                                <div class="inline-meta" title="{{ $event->uuid }}">
+                                    UUID {{ \Illuminate\Support\Str::limit($event->uuid, 8, '') }}
                                 </div>
                             </td>
 
@@ -187,12 +189,6 @@
                                 <div class="table-cell-meta">
                                     {{ optional($event->occurred_at)?->format('H:i:s') ?: '—' }}
                                 </div>
-                            </td>
-
-                            <td class="table-actions">
-                                <a href="{{ route('error-tracker.events.show', $event) }}" class="btn btn-outline btn-sm">
-                                    View
-                                </a>
                             </td>
                         </tr>
                     @endforeach
