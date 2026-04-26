@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  pint:
+    name: Pint
+    runs-on: ubuntu-latest
+
+    env:
+      COMPOSER_ROOT_VERSION: dev-main
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate Composer
+        run: composer validate --strict
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Run Pint
+        run: vendor/bin/pint --test
+
+  tests:
+    name: Tests - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+    runs-on: ubuntu-latest
+
+    env:
+      COMPOSER_ROOT_VERSION: dev-main
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: 8.3
+            laravel: 11.*
+            testbench: 9.*
+          - php: 8.3
+            laravel: 12.*
+            testbench: 10.*
+          - php: 8.4
+            laravel: 13.*
+            testbench: 11.*
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate Composer
+        run: composer validate --strict
+
+      - name: Configure matrix dependencies
+        run: |
+          composer require \
+            "illuminate/contracts:${{ matrix.laravel }}" \
+            "illuminate/support:${{ matrix.laravel }}" \
+            "orchestra/testbench:${{ matrix.testbench }}" \
+            --dev --no-interaction --no-update
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-interaction --no-progress -W
+
+      - name: Run Pest
+        run: vendor/bin/pest

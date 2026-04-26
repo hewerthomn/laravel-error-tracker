@@ -1,0 +1,50 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('error_tracker_issues', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('fingerprint', 191);
+            $table->string('title');
+            $table->string('level', 32)->default('error');
+            $table->string('status', 32)->default('open');
+            $table->string('environment', 64)->default(app()->environment());
+
+            $table->string('exception_class')->nullable();
+            $table->text('message_sample')->nullable();
+
+            $table->timestamp('first_seen_at')->nullable();
+            $table->timestamp('last_seen_at')->nullable();
+
+            $table->unsignedBigInteger('total_events')->default(0);
+            $table->unsignedBigInteger('affected_users')->default(0);
+
+            $table->unsignedBigInteger('last_event_id')->nullable();
+
+            $table->timestamp('muted_until')->nullable();
+            $table->string('mute_reason')->nullable();
+
+            $table->timestamp('resolved_at')->nullable();
+            $table->timestamp('ignored_at')->nullable();
+
+            $table->timestamps();
+
+            $table->index(['status', 'environment', 'last_seen_at'], 'et_issues_status_env_last_seen_idx');
+            $table->index(['level', 'last_seen_at'], 'et_issues_level_last_seen_idx');
+            $table->index('last_event_id', 'et_issues_last_event_id_idx');
+            $table->unique(['fingerprint', 'environment'], 'et_issues_fingerprint_environment_unique');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('error_tracker_issues');
+    }
+};
