@@ -35,7 +35,7 @@ it('stores event and trace paths as relative paths with source context for proje
         $result = app(RecordThrowableAction::class)->handle($throwable, ['level' => 'error']);
 
         if ($result === null) {
-            $this->fail('Expected the throwable to be recorded.');
+            expect(false)->toBeTrue('Expected the throwable to be recorded.');
         }
 
         $event = $result->event->fresh();
@@ -63,7 +63,7 @@ it('does not include source context for vendor frames by default', function () {
         $result = app(RecordThrowableAction::class)->handle($throwable, ['level' => 'error']);
 
         if ($result === null) {
-            $this->fail('Expected the throwable to be recorded.');
+            expect(false)->toBeTrue('Expected the throwable to be recorded.');
         }
 
         $trace = $result->event->fresh()->trace_json ?? [];
@@ -84,7 +84,7 @@ it('uses the first project frame as culprit when an exception is thrown in frame
         $result = app(RecordThrowableAction::class)->handle($throwable, ['level' => 'error']);
 
         if ($result === null) {
-            $this->fail('Expected the throwable to be recorded.');
+            expect(false)->toBeTrue('Expected the throwable to be recorded.');
         }
 
         $event = $result->event->fresh(['issue', 'feedback']);
@@ -123,7 +123,7 @@ it('renders normalized paths and source context on the event detail view', funct
         $result = app(RecordThrowableAction::class)->handle($throwable, ['level' => 'error']);
 
         if ($result === null) {
-            $this->fail('Expected the throwable to be recorded.');
+            expect(false)->toBeTrue('Expected the throwable to be recorded.');
         }
 
         $event = $result->event->fresh(['issue', 'feedback']);
