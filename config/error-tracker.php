@@ -137,6 +137,8 @@ return [
     */
     'stacktrace' => [
         'smart_grouping' => true,
+        'path_display' => env('ERROR_TRACKER_STACKTRACE_PATH_DISPLAY', 'relative'),
+        'store_absolute_paths' => env('ERROR_TRACKER_STACKTRACE_STORE_ABSOLUTE_PATHS', false),
 
         'project_paths' => [
             app_path(),
@@ -162,6 +164,29 @@ return [
 
         'show_source_context' => true,
         'source_context_lines' => 5,
+        'source_context' => [
+            'enabled' => env('ERROR_TRACKER_SOURCE_CONTEXT_ENABLED', true),
+            'lines_before' => 5,
+            'lines_after' => 5,
+            'max_frames' => 5,
+            'project_only' => true,
+            'fallback_to_throwing_frame' => true,
+            'max_file_size_kb' => 512,
+
+            'paths' => [
+                app_path(),
+                base_path('routes'),
+                base_path('database'),
+                base_path('packages'),
+                base_path('modules'),
+            ],
+
+            'excluded_paths' => [
+                base_path('vendor'),
+                storage_path(),
+                base_path('bootstrap/cache'),
+            ],
+        ],
 
         'store_arguments' => false,
     ],

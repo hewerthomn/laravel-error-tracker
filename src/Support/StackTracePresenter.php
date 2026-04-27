@@ -10,7 +10,7 @@ class StackTracePresenter
     ) {}
 
     /**
-     * @return array{frames: array<int, array<string, mixed>>, first_project_frame: array<string, mixed>|null, has_frames: bool}
+     * @return array{frames: array<int, array<string, mixed>>, first_project_frame: array<string, mixed>|null, culprit_frame: array<string, mixed>|null, throwing_frame: array<string, mixed>|null, has_frames: bool}
      */
     public function present(mixed $trace): array
     {
@@ -18,15 +18,19 @@ class StackTracePresenter
         $presentedFrames = [];
         $pendingGroup = [];
         $firstProjectFrame = null;
+        $culpritFrame = null;
+        $throwingFrame = null;
         $smartGrouping = (bool) config('error-tracker.stacktrace.smart_grouping', true);
 
         foreach ($frames as $index => $frame) {
             $presented = $this->presentFrame($frame, $index);
+            $culpritFrame ??= $presented['is_culprit'] ? $presented : null;
+            $throwingFrame ??= $presented['is_throwing_frame'] ? $presented : null;
 
-            if ($presented['classification'] === 'project') {
+            if ($presented['classification'] === 'project' || $presented['is_culprit']) {
                 $this->flushGroup($presentedFrames, $pendingGroup);
                 $presentedFrames[] = $presented;
-                $firstProjectFrame ??= $presented;
+                $firstProjectFrame ??= $presented['classification'] === 'project' ? $presented : null;
 
                 continue;
             }
@@ -45,6 +49,8 @@ class StackTracePresenter
         return [
             'frames' => $presentedFrames,
             'first_project_frame' => $firstProjectFrame,
+            'culprit_frame' => $culpritFrame ?? $firstProjectFrame,
+            'throwing_frame' => $throwingFrame,
             'has_frames' => $frames !== [],
         ];
     }
@@ -78,8 +84,9 @@ class StackTracePresenter
      */
     protected function presentFrame(array $frame, int $index): array
     {
-        $classification = $this->classifier->classify($frame);
+        $classification = $this->frameClassification($frame);
         $file = $this->stringValue($frame['file'] ?? null);
+        $displayFile = $this->classifier->relativeFile($file);
         $line = is_numeric($frame['line'] ?? null) ? (int) $frame['line'] : null;
         $class = $this->stringValue($frame['class'] ?? null);
         $function = $this->stringValue($frame['function'] ?? null);
@@ -91,14 +98,16 @@ class StackTracePresenter
             'index' => $index,
             'classification' => $classification,
             'in_app' => $classification === 'project',
-            'file' => $file,
-            'relative_file' => $this->classifier->relativeFile($file),
+            'is_throwing_frame' => (bool) ($frame['is_throwing_frame'] ?? false),
+            'is_culprit' => (bool) ($frame['is_culprit'] ?? false),
+            'file' => $displayFile,
+            'relative_file' => $displayFile,
             'line' => $line,
             'class' => $class,
             'function' => $function,
             'callable' => $callable !== '' ? $callable : 'unknown',
             'source_context' => $classification === 'project'
-                ? $this->sourceContextReader->read(['file' => $file, 'line' => $line])
+                ? ($frame['source_context'] ?? $this->sourceContextReader->read(['file' => $file, 'line' => $line]))
                 : null,
         ];
     }
@@ -134,5 +143,16 @@ class StackTracePresenter
     protected function stringValue(mixed $value): ?string
     {
         return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    protected function frameClassification(array $frame): string
+    {
+        $classification = $this->stringValue($frame['classification'] ?? null);
+
+        if (in_array($classification, ['project', 'vendor', 'framework', 'internal', 'unknown'], true)) {
+            return $classification;
+        }
+
+        return $this->classifier->classify($frame);
     }
 }

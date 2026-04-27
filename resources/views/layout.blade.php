@@ -1641,6 +1641,10 @@
       }
 
       .first-project-frame {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
           padding: 10px 12px;
           border: 1px solid #bfdbfe;
           border-radius: 10px;
@@ -1671,6 +1675,11 @@
       .stacktrace-frame-project {
           border-color: #bfdbfe;
           box-shadow: inset 3px 0 0 #2563eb;
+      }
+
+      .stacktrace-frame-culprit {
+          border-color: #60a5fa;
+          box-shadow: inset 3px 0 0 #1d4ed8, 0 8px 24px rgba(37, 99, 235, 0.08);
       }
 
       .stacktrace-frame-muted {
@@ -1706,6 +1715,19 @@
 
       .stacktrace-classification {
           text-transform: lowercase;
+      }
+
+      .stacktrace-note {
+          display: inline-flex;
+          align-items: center;
+          min-height: 22px;
+          padding: 3px 7px;
+          border-radius: 999px;
+          background: #fff7ed;
+          color: #9a3412;
+          font-size: 11px;
+          font-weight: 800;
+          line-height: 1;
       }
 
       .stacktrace-callable {

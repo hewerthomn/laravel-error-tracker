@@ -14,6 +14,9 @@ use Hewerthomn\ErrorTracker\Services\IssueStatusService;
 use Hewerthomn\ErrorTracker\Services\SensitiveDataSanitizer;
 use Hewerthomn\ErrorTracker\Services\TrendAggregator;
 use Hewerthomn\ErrorTracker\Support\ErrorPageState;
+use Hewerthomn\ErrorTracker\Support\StackFrameClassifier;
+use Hewerthomn\ErrorTracker\Support\StackTrace\PathNormalizer;
+use Hewerthomn\ErrorTracker\Support\StackTrace\SourceContextReader;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -51,6 +54,9 @@ class ErrorTrackerServiceProvider extends PackageServiceProvider
         $this->app->singleton(IssueNotifier::class);
         $this->app->singleton(FeedbackService::class);
         $this->app->singleton(ErrorPageState::class);
+        $this->app->singleton(PathNormalizer::class);
+        $this->app->singleton(SourceContextReader::class);
+        $this->app->singleton(StackFrameClassifier::class);
 
         $this->app->singleton(ErrorTrackerManager::class, function ($app) {
             return new ErrorTrackerManager(
@@ -58,6 +64,9 @@ class ErrorTrackerServiceProvider extends PackageServiceProvider
                 $app->make(SensitiveDataSanitizer::class),
                 $app->make(TrendAggregator::class),
                 $app->make(IssueStatusService::class),
+                $app->make(PathNormalizer::class),
+                $app->make(SourceContextReader::class),
+                $app->make(StackFrameClassifier::class),
             );
         });
 

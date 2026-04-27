@@ -27,8 +27,10 @@
         'local' => 'badge-info',
         default => 'badge-neutral',
     };
-    $location = $issue->lastEvent?->file
-        ? $issue->lastEvent->file.($issue->lastEvent->line ? ':'.$issue->lastEvent->line : '')
+    $pathNormalizer = app(\Hewerthomn\ErrorTracker\Support\StackTrace\PathNormalizer::class);
+    $lastEventFile = $pathNormalizer->normalize($issue->lastEvent?->file);
+    $location = $lastEventFile
+        ? $lastEventFile.($issue->lastEvent?->line ? ':'.$issue->lastEvent->line : '')
         : ($issue->exception_class ?: 'No frame available');
     $resolvedByLabel = $status === 'resolved'
         ? match ($issue->resolved_by_type) {

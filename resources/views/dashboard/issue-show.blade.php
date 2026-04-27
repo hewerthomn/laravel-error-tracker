@@ -162,6 +162,7 @@
 
                             $eventSource = $event->route_name
                                 ?: ($event->request_path ?: ($event->command_name ?: ($event->job_name ?: 'Unknown source')));
+                            $eventFile = app(\Hewerthomn\ErrorTracker\Support\StackTrace\PathNormalizer::class)->normalize($event->file);
                         @endphp
 
                         <tr>
@@ -185,9 +186,9 @@
                                     {{ \Illuminate\Support\Str::limit($event->message ?: 'No message available.', 110) }}
                                 </div>
 
-                                @if ($event->file || $event->line)
+                                @if ($eventFile || $event->line)
                                     <div class="table-cell-meta">
-                                        {{ $event->file ?: '—' }}@if($event->line):{{ $event->line }}@endif
+                                        {{ $eventFile ?: '—' }}@if($event->line):{{ $event->line }}@endif
                                     </div>
                                 @endif
                             </td>

@@ -5,6 +5,9 @@ namespace Hewerthomn\ErrorTracker\Services;
 use Hewerthomn\ErrorTracker\Contracts\ExceptionRecorder;
 use Hewerthomn\ErrorTracker\Data\RecordedEventResult;
 use Hewerthomn\ErrorTracker\Models\Issue;
+use Hewerthomn\ErrorTracker\Support\StackFrameClassifier;
+use Hewerthomn\ErrorTracker\Support\StackTrace\PathNormalizer;
+use Hewerthomn\ErrorTracker\Support\StackTrace\SourceContextReader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -17,6 +20,9 @@ class ErrorTrackerManager implements ExceptionRecorder
         protected SensitiveDataSanitizer $sanitizer,
         protected TrendAggregator $trendAggregator,
         protected IssueStatusService $issueStatusService,
+        protected PathNormalizer $pathNormalizer,
+        protected SourceContextReader $sourceContextReader,
+        protected StackFrameClassifier $stackFrameClassifier,
     ) {}
 
     public function record(Throwable $throwable, array $context = []): RecordedEventResult
@@ -110,15 +116,17 @@ class ErrorTrackerManager implements ExceptionRecorder
         $request = $this->currentRequest();
         $userData = $this->extractUserData($request);
         $headers = $this->extractHeaders($request);
-        $trace = $this->normalizeTrace($throwable->getTrace());
+        $stackTrace = $this->buildStackTrace($throwable);
+        $culpritFrame = $stackTrace['culprit_frame'];
+        $throwingFrame = $stackTrace['throwing_frame'];
 
         return [
             'occurred_at' => $occurredAt,
             'level' => (string) ($context['level'] ?? 'error'),
             'exception_class' => $throwable::class,
             'message' => (string) $throwable->getMessage(),
-            'file' => $throwable->getFile(),
-            'line' => $throwable->getLine(),
+            'file' => $culpritFrame['file'] ?? $throwingFrame['file'] ?? null,
+            'line' => $culpritFrame['line'] ?? $throwingFrame['line'] ?? null,
             'request_method' => $request?->method(),
             'request_path' => $request?->path(),
             'route_name' => $request?->route()?->getName(),
@@ -134,7 +142,7 @@ class ErrorTrackerManager implements ExceptionRecorder
             'user_type' => $userData['user_type'],
             'user_label' => $userData['user_label'],
             'ip_hash' => $this->resolveIpHash($request),
-            'trace_json' => $trace,
+            'trace_json' => $stackTrace['frames'],
             'context_json' => $this->sanitizer->sanitizeContext($context),
             'headers_json' => $headers,
             'feedback_token' => (string) Str::uuid(),
@@ -250,19 +258,82 @@ class ErrorTrackerManager implements ExceptionRecorder
         return implode(' ', $argv);
     }
 
-    protected function normalizeTrace(array $trace): array
+    /**
+     * @return array{
+     *     frames: array<int, array<string, mixed>>,
+     *     culprit_frame: array<string, mixed>|null,
+     *     throwing_frame: array<string, mixed>|null
+     * }
+     */
+    protected function buildStackTrace(Throwable $throwable): array
     {
         $maxFrames = (int) config('error-tracker.capture.max_trace_frames', 50);
-        $frames = array_slice($trace, 0, $maxFrames);
+        $frames = array_merge([
+            [
+                'file' => $throwable->getFile(),
+                'line' => $throwable->getLine(),
+                'function' => null,
+                'class' => $throwable::class,
+                'type' => null,
+                'is_throwing_frame' => true,
+            ],
+        ], array_slice($throwable->getTrace(), 0, $maxFrames));
 
-        return array_map(function (array $frame): array {
+        $classifications = array_map(
+            fn (array $frame): string => $this->stackFrameClassifier->classify($frame),
+            $frames
+        );
+        $projectCulpritIndex = null;
+
+        foreach ($classifications as $index => $classification) {
+            if ($classification === 'project') {
+                $projectCulpritIndex = $index;
+
+                break;
+            }
+        }
+
+        $fallbackToThrowingFrame = (bool) config('error-tracker.stacktrace.source_context.fallback_to_throwing_frame', true);
+        $culpritIndex = $projectCulpritIndex ?? ($fallbackToThrowingFrame ? 0 : null);
+        $eventLocationIndex = $projectCulpritIndex ?? 0;
+        $maxSourceContextFrames = max(0, (int) config('error-tracker.stacktrace.source_context.max_frames', 5));
+        $sourceContextFrames = 0;
+        $normalizedFrames = [];
+
+        foreach ($frames as $index => $frame) {
+            $file = is_string($frame['file'] ?? null) ? $frame['file'] : null;
+            $classification = $classifications[$index] ?? 'unknown';
+            $isCulprit = $culpritIndex === $index;
+            $sourceContext = null;
+            $shouldReadSourceContext = $file !== null
+                && $sourceContextFrames < $maxSourceContextFrames
+                && (
+                    $classification === 'project'
+                    || ($isCulprit && $projectCulpritIndex === null && $fallbackToThrowingFrame)
+                );
+
+            if ($shouldReadSourceContext) {
+                $sourceContext = $this->sourceContextReader->read($file, $frame['line'] ?? null);
+
+                if ($sourceContext !== null) {
+                    $sourceContextFrames++;
+                }
+            }
+
             $normalized = [
-                'file' => $frame['file'] ?? null,
+                'file' => $this->pathNormalizer->normalize($file),
                 'line' => $frame['line'] ?? null,
                 'function' => $frame['function'] ?? null,
                 'class' => $frame['class'] ?? null,
                 'type' => $frame['type'] ?? null,
+                'classification' => $classification,
+                'is_throwing_frame' => (bool) ($frame['is_throwing_frame'] ?? false),
+                'is_culprit' => $isCulprit,
             ];
+
+            if ($sourceContext !== null) {
+                $normalized['source_context'] = $sourceContext;
+            }
 
             if (config('error-tracker.stacktrace.store_arguments', false)) {
                 $normalized['args'] = array_map(
@@ -271,8 +342,14 @@ class ErrorTrackerManager implements ExceptionRecorder
                 );
             }
 
-            return $normalized;
-        }, $frames);
+            $normalizedFrames[] = $normalized;
+        }
+
+        return [
+            'frames' => $normalizedFrames,
+            'culprit_frame' => $normalizedFrames[$eventLocationIndex] ?? null,
+            'throwing_frame' => $normalizedFrames[0],
+        ];
     }
 
     protected function truncateText(?string $value, int $limit): ?string

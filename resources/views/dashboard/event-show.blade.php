@@ -31,6 +31,13 @@
         $stackTrace = $stackTrace ?? ['frames' => [], 'first_project_frame' => null, 'has_frames' => false];
         $stackEntries = $stackTrace['frames'] ?? [];
         $firstProjectFrame = $stackTrace['first_project_frame'] ?? null;
+        $culpritFrame = $stackTrace['culprit_frame'] ?? $firstProjectFrame;
+        $throwingFrame = $stackTrace['throwing_frame'] ?? null;
+        $exceptionThrownInFramework = $throwingFrame
+            && ($throwingFrame['classification'] ?? null) === 'framework'
+            && ! ($throwingFrame['is_culprit'] ?? false);
+        $pathNormalizer = app(\Hewerthomn\ErrorTracker\Support\StackTrace\PathNormalizer::class);
+        $eventFile = $pathNormalizer->normalize($event->file);
         $headersData = is_array($event->headers_json) ? $event->headers_json : [];
         $contextData = is_array($event->context_json) ? $event->context_json : [];
 
@@ -233,7 +240,7 @@
                                 <div class="panel-soft">
                                     <div class="field-group">
                                         <span class="field-label">File</span>
-                                        <div>{{ $event->file ?: '—' }}</div>
+                                        <div>{{ $eventFile ?: '—' }}</div>
                                     </div>
 
                                     <div class="field-group" style="margin-top: 12px;">
@@ -314,12 +321,15 @@
                             <div class="stacktrace-order">Most recent call first</div>
                         </div>
 
-                        @if ($firstProjectFrame)
+                        @if ($culpritFrame)
                             <div class="first-project-frame">
-                                First project frame:
+                                Application frame:
                                 <span class="mono-inline">
-                                    {{ $firstProjectFrame['relative_file'] ?? $firstProjectFrame['file'] ?? 'unknown file' }}@if($firstProjectFrame['line']):{{ $firstProjectFrame['line'] }}@endif
+                                    {{ $culpritFrame['relative_file'] ?? $culpritFrame['file'] ?? 'unknown file' }}@if($culpritFrame['line']):{{ $culpritFrame['line'] }}@endif
                                 </span>
+                                @if ($exceptionThrownInFramework)
+                                    <span class="stacktrace-note">Exception thrown in framework</span>
+                                @endif
                             </div>
                         @endif
 
@@ -342,6 +352,12 @@
                                                     <div class="stacktrace-frame-main">
                                                         <span class="stacktrace-index">#{{ $frame['index'] ?? $loop->index }}</span>
                                                         <span class="stacktrace-callable">{{ $frame['callable'] ?? 'unknown' }}</span>
+                                                        <span class="stacktrace-classification">{{ $frame['classification'] ?? 'non_project' }}</span>
+                                                        @if ($frame['is_throwing_frame'] ?? false)
+                                                            <span class="stacktrace-note">
+                                                                {{ ($frame['classification'] ?? null) === 'framework' ? 'Exception thrown in framework' : 'Exception thrown here' }}
+                                                            </span>
+                                                        @endif
                                                     </div>
 
                                                     <div class="stacktrace-location">
@@ -352,11 +368,23 @@
                                         </div>
                                     </div>
                                 @else
-                                    <div class="stacktrace-frame stacktrace-frame-project">
+                                    @php
+                                        $isCulprit = (bool) ($entry['is_culprit'] ?? false);
+                                        $classification = (string) ($entry['classification'] ?? 'unknown');
+                                    @endphp
+                                    <div class="stacktrace-frame {{ $classification === 'project' ? 'stacktrace-frame-project' : 'stacktrace-frame-muted' }} @if($isCulprit) stacktrace-frame-culprit @endif">
                                         <div class="stacktrace-frame-main">
                                             <span class="stacktrace-index">#{{ $entry['index'] ?? $loop->index }}</span>
                                             <span class="stacktrace-callable">{{ $entry['callable'] ?? 'unknown' }}</span>
-                                            <span class="stacktrace-classification">project</span>
+                                            @if ($isCulprit)
+                                                <span class="stacktrace-classification">Application frame</span>
+                                            @endif
+                                            <span class="stacktrace-classification">{{ $classification }}</span>
+                                            @if ($entry['is_throwing_frame'] ?? false)
+                                                <span class="stacktrace-note">
+                                                    {{ $classification === 'framework' ? 'Exception thrown in framework' : 'Exception thrown here' }}
+                                                </span>
+                                            @endif
                                         </div>
 
                                         <div class="stacktrace-location">
@@ -364,11 +392,21 @@
                                         </div>
 
                                         @if (! empty($entry['source_context']))
+                                            @php
+                                                $sourceContext = $entry['source_context'];
+                                                $sourceLines = is_array($sourceContext)
+                                                    ? ($sourceContext['lines'] ?? $sourceContext)
+                                                    : [];
+                                            @endphp
                                             <div class="source-context">
-                                                @foreach ($entry['source_context'] as $sourceLine)
-                                                    <div class="source-line @if($sourceLine['highlight']) is-highlighted @endif">
+                                                @foreach ($sourceLines as $sourceLine)
+                                                    @php
+                                                        $isErrorLine = (bool) ($sourceLine['is_error_line'] ?? $sourceLine['highlight'] ?? false);
+                                                        $code = (string) ($sourceLine['code'] ?? $sourceLine['content'] ?? '');
+                                                    @endphp
+                                                    <div class="source-line @if($isErrorLine) is-highlighted @endif">
                                                         <span class="source-line-number">{{ $sourceLine['number'] }}</span>
-                                                        <pre>{{ $sourceLine['content'] }}</pre>
+                                                        <pre>{{ $code }}</pre>
                                                     </div>
                                                 @endforeach
                                             </div>

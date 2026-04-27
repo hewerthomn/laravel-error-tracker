@@ -2,8 +2,16 @@
 
 namespace Hewerthomn\ErrorTracker\Support;
 
+use Hewerthomn\ErrorTracker\Support\StackTrace\PathNormalizer;
+
 class StackFrameClassifier
 {
+    public function __construct(
+        protected ?PathNormalizer $pathNormalizer = null,
+    ) {
+        $this->pathNormalizer ??= new PathNormalizer;
+    }
+
     public function classify(array $frame): string
     {
         $file = $this->stringValue($frame['file'] ?? null);
@@ -48,27 +56,28 @@ class StackFrameClassifier
             return null;
         }
 
-        $normalized = $this->normalizePath($file);
-        $basePath = $this->normalizePath(base_path());
+        $mode = (string) config('error-tracker.stacktrace.path_display', 'relative');
 
-        if ($this->pathEqualsOrIsInside($normalized, $basePath)) {
-            return ltrim(substr($normalized, strlen($basePath)), '/');
+        if ($mode !== 'relative') {
+            return $this->pathNormalizer->normalize($file);
         }
 
-        foreach ($this->projectPaths() as $path) {
-            $projectPath = $this->normalizePath($path);
+        $normalized = $this->normalizePath($file);
 
-            if (! $this->pathEqualsOrIsInside($normalized, $projectPath)) {
+        foreach (array_merge($this->projectPaths(), $this->nonProjectPaths()) as $path) {
+            $configuredPath = $this->normalizePath($path);
+
+            if (! $this->pathEqualsOrIsInside($normalized, $configuredPath)) {
                 continue;
             }
 
-            $prefix = basename($projectPath);
-            $suffix = ltrim(substr($normalized, strlen($projectPath)), '/');
+            $prefix = basename($configuredPath);
+            $suffix = ltrim(substr($normalized, strlen($configuredPath)), '/');
 
             return $suffix === '' ? $prefix : $prefix.'/'.$suffix;
         }
 
-        return $normalized;
+        return $this->pathNormalizer->normalize($file);
     }
 
     public function normalizePath(string $path): string
@@ -149,11 +158,18 @@ class StackFrameClassifier
      */
     protected function isWithinAnyPath(string $file, array $paths): bool
     {
-        $normalizedFile = $this->normalizePath($file);
+        $candidates = [$this->normalizePath($file)];
+        $absoluteCandidate = $this->pathNormalizer->toAbsoluteFromRelative($file);
+
+        if ($absoluteCandidate !== null) {
+            $candidates[] = $this->normalizePath($absoluteCandidate);
+        }
 
         foreach ($paths as $path) {
-            if ($this->pathEqualsOrIsInside($normalizedFile, $this->normalizePath($path))) {
-                return true;
+            foreach ($candidates as $candidate) {
+                if ($this->pathEqualsOrIsInside($candidate, $this->normalizePath($path))) {
+                    return true;
+                }
             }
         }
 
@@ -167,7 +183,9 @@ class StackFrameClassifier
         return str_contains($normalized, '/storage/framework/')
             || str_ends_with($normalized, '/storage/framework')
             || str_contains($normalized, '/bootstrap/cache/')
-            || str_ends_with($normalized, '/bootstrap/cache');
+            || str_ends_with($normalized, '/bootstrap/cache')
+            || str_contains($normalized, '/vendor/laravel/framework/')
+            || str_starts_with($normalized, 'vendor/laravel/framework/');
     }
 
     protected function isVendorPath(string $file): bool
@@ -175,7 +193,8 @@ class StackFrameClassifier
         $normalized = $this->normalizePath($file);
 
         return str_contains($normalized, '/vendor/')
-            || str_ends_with($normalized, '/vendor');
+            || str_ends_with($normalized, '/vendor')
+            || str_starts_with($normalized, 'vendor/');
     }
 
     protected function pathEqualsOrIsInside(string $file, string $path): bool

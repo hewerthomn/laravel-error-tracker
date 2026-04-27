@@ -9,6 +9,8 @@ beforeEach(function () {
 
     config([
         'error-tracker.stacktrace.smart_grouping' => true,
+        'error-tracker.stacktrace.path_display' => 'relative',
+        'error-tracker.stacktrace.store_absolute_paths' => false,
         'error-tracker.stacktrace.project_paths' => [
             $root.'/app',
             $root.'/routes',
@@ -26,6 +28,16 @@ beforeEach(function () {
         'error-tracker.stacktrace.collapse_non_project_frames' => true,
         'error-tracker.stacktrace.show_source_context' => true,
         'error-tracker.stacktrace.source_context_lines' => 1,
+        'error-tracker.stacktrace.source_context.paths' => [
+            $root.'/app',
+            $root.'/routes',
+            $root.'/database',
+        ],
+        'error-tracker.stacktrace.source_context.excluded_paths' => [
+            $root.'/vendor',
+            $root.'/storage',
+            $root.'/bootstrap/cache',
+        ],
     ]);
 });
 
@@ -57,12 +69,21 @@ it('classifies database frames as project', function () {
     ]))->toBe('project');
 });
 
-it('classifies vendor frames as vendor', function () {
+it('classifies laravel framework frames as framework', function () {
     $classifier = new StackFrameClassifier;
 
     expect($classifier->classify([
         'file' => stackTracePresentationRoot().'/vendor/laravel/framework/src/Illuminate/Routing/Router.php',
         'class' => 'Illuminate\\Routing\\Router',
+    ]))->toBe('framework');
+});
+
+it('classifies non framework vendor frames as vendor', function () {
+    $classifier = new StackFrameClassifier;
+
+    expect($classifier->classify([
+        'file' => stackTracePresentationRoot().'/vendor/acme/package/src/Client.php',
+        'class' => 'Acme\\Package\\Client',
     ]))->toBe('vendor');
 });
 
