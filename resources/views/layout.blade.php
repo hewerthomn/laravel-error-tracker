@@ -130,6 +130,16 @@
             line-height: 1.2;
         }
 
+        .page-title-link {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .page-title-link:hover {
+            color: var(--link);
+            text-decoration: none;
+        }
+
         .title-meta {
             display: flex;
             gap: 8px;

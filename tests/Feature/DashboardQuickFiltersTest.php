@@ -160,6 +160,7 @@ it('renders the issue sidebar search input and sort segmented control', function
     $this->get(route('error-tracker.index', ['period' => 'all']))
         ->assertOk()
         ->assertSee('Error Tracker')
+        ->assertSee('href="'.route('error-tracker.index').'"', false)
         ->assertSee('Status')
         ->assertSee('Search errors, paths, or messages...')
         ->assertSee('Recent')

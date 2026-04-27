@@ -3,6 +3,7 @@
 @section('content')
     @include('error-tracker::partials.page-header', [
         'title' => 'Error Tracker',
+        'titleUrl' => route('error-tracker.index'),
         'subtitle' => $appName,
         'breadcrumbs' => [],
         'actions' => 'error-tracker::dashboard.partials.period-filter',

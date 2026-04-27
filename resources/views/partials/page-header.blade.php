@@ -1,6 +1,7 @@
 @php
     $breadcrumbs = $breadcrumbs ?? [];
     $title = $title ?? '';
+    $titleUrl = $titleUrl ?? null;
     $subtitle = $subtitle ?? null;
     $badges = $badges ?? [];
     $actions = $actions ?? null;
@@ -37,7 +38,13 @@
         </div>
 
         <div class="page-title-line">
-            <h1>{{ $title }}</h1>
+            <h1>
+                @if ($titleUrl)
+                    <a href="{{ $titleUrl }}" class="page-title-link">{{ $title }}</a>
+                @else
+                    {{ $title }}
+                @endif
+            </h1>
 
             @if ($subtitle)
                 <span class="page-title-app-name">{{ $subtitle }}</span>
