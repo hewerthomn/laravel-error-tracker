@@ -3,6 +3,7 @@
     $title = $title ?? '';
     $subtitle = $subtitle ?? null;
     $badges = $badges ?? [];
+    $actions = $actions ?? null;
     $showHomeLink = config('error-tracker.dashboard.show_home_link', true);
     $homeUrl = config('error-tracker.dashboard.app_home_url', '/');
     $homeLabel = config('error-tracker.dashboard.app_home_label', 'Back to app');
@@ -35,16 +36,20 @@
             @endforeach
         </div>
 
-        <h1>{{ $title }}</h1>
+        <div class="page-title-line">
+            <h1>{{ $title }}</h1>
 
-        @if ($subtitle)
-            <div class="muted" style="margin-top: 6px;">
-                {{ $subtitle }}
-            </div>
-        @endif
+            @if ($subtitle)
+                <span class="page-title-app-name">{{ $subtitle }}</span>
+            @endif
+        </div>
     </div>
 
-    @if (!empty($badges))
+    @if ($actions)
+        <div class="title-meta">
+            @include($actions)
+        </div>
+    @elseif (!empty($badges))
         <div class="title-meta">
             @foreach ($badges as $badge)
                 <span class="badge {{ $badge['class'] ?? 'badge-neutral' }}">

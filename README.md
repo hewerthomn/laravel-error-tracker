@@ -182,6 +182,10 @@ Error Tracker - {APP_NAME}
 
 The dashboard also supports a configurable shortcut back to the host application.
 
+### Dashboard quick filters
+
+The issues dashboard includes a left sidebar with quick filters for status, level, period, and environment. The main issue list includes search for errors, paths, or messages, plus sorting by recent, frequent, or oldest issues. Filter links preserve the current query string, and status and level filters show counts for the current dashboard slice.
+
 ## Configuration
 
 Main configuration file:
