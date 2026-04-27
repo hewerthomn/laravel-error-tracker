@@ -35,6 +35,14 @@
             'auto' => $environmentCount > 1,
             default => (bool) config('error-tracker.dashboard.show_environment_in_issue_header', 'auto'),
         };
+
+        $resolvedByLabel = $issue->status === 'resolved'
+            ? match ($issue->resolved_by_type) {
+                'manual' => 'resolved manually',
+                'auto' => 'resolved automatically',
+                default => null,
+            }
+            : null;
     @endphp
 
     @include('error-tracker::partials.page-header', [
@@ -91,6 +99,29 @@
                     <div class="stat-meta">Unique identified users</div>
                 </div>
             </div>
+
+            @if ($resolvedByLabel || $issue->resolved_reason)
+                <div class="panel-soft" style="margin-top: 18px;">
+                    @if ($resolvedByLabel)
+                        <div class="field-group">
+                            <span class="field-label">Resolution</span>
+                            <div class="muted">
+                                {{ ucfirst($resolvedByLabel) }}
+                                @if ($issue->resolved_at)
+                                    on {{ $issue->resolved_at->format('d/m/Y H:i:s') }}
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+
+                    @if ($issue->resolved_reason)
+                        <div class="field-group" style="margin-top: 12px;">
+                            <span class="field-label">Reason</span>
+                            <div>{{ $issue->resolved_reason }}</div>
+                        </div>
+                    @endif
+                </div>
+            @endif
         </div>
 
         <div class="card">

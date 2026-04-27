@@ -3,6 +3,7 @@
 namespace Hewerthomn\ErrorTracker;
 
 use Hewerthomn\ErrorTracker\Actions\RecordThrowableAction;
+use Hewerthomn\ErrorTracker\Commands\AutoResolveCommand;
 use Hewerthomn\ErrorTracker\Commands\PruneCommand;
 use Hewerthomn\ErrorTracker\Contracts\ExceptionRecorder;
 use Hewerthomn\ErrorTracker\Services\ErrorTrackerManager;
@@ -30,6 +31,8 @@ class ErrorTrackerServiceProvider extends PackageServiceProvider
             ->hasMigration('create_error_tracker_issue_trends_table')
             ->hasMigration('create_error_tracker_feedback_table')
             ->hasMigration('add_user_id_to_error_tracker_feedback_table')
+            ->hasMigration('add_resolution_metadata_to_error_tracker_issues_table')
+            ->hasCommand(AutoResolveCommand::class)
             ->hasCommand(PruneCommand::class)
             ->hasInstallCommand(function ($command) {
                 $command
@@ -54,6 +57,7 @@ class ErrorTrackerServiceProvider extends PackageServiceProvider
                 $app->make(FingerprintGenerator::class),
                 $app->make(SensitiveDataSanitizer::class),
                 $app->make(TrendAggregator::class),
+                $app->make(IssueStatusService::class),
             );
         });
 

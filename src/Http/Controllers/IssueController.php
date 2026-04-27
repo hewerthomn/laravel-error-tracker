@@ -38,7 +38,7 @@ class IssueController extends Controller
 
     public function resolve(Issue $issue)
     {
-        $this->issueStatusService->resolve($issue);
+        $this->issueStatusService->resolveManually($issue);
 
         return redirect()
             ->route('error-tracker.issues.show', $issue)

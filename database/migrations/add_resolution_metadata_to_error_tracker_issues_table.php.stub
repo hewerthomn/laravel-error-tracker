@@ -1,0 +1,42 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        if (! Schema::hasTable('error_tracker_issues')) {
+            return;
+        }
+
+        Schema::table('error_tracker_issues', function (Blueprint $table) {
+            if (! Schema::hasColumn('error_tracker_issues', 'resolved_by_type')) {
+                $table->string('resolved_by_type', 32)->nullable()->after('resolved_at');
+            }
+
+            if (! Schema::hasColumn('error_tracker_issues', 'resolved_reason')) {
+                $table->text('resolved_reason')->nullable()->after('resolved_by_type');
+            }
+        });
+    }
+
+    public function down(): void
+    {
+        if (! Schema::hasTable('error_tracker_issues')) {
+            return;
+        }
+
+        Schema::table('error_tracker_issues', function (Blueprint $table) {
+            if (Schema::hasColumn('error_tracker_issues', 'resolved_reason')) {
+                $table->dropColumn('resolved_reason');
+            }
+
+            if (Schema::hasColumn('error_tracker_issues', 'resolved_by_type')) {
+                $table->dropColumn('resolved_by_type');
+            }
+        });
+    }
+};

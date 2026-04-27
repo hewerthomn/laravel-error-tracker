@@ -30,6 +30,18 @@
                 default => 'badge-neutral',
             };
         };
+
+        $resolvedByLabel = function ($issue): ?string {
+            if ($issue->status !== 'resolved') {
+                return null;
+            }
+
+            return match ($issue->resolved_by_type) {
+                'manual' => 'resolved manually',
+                'auto' => 'resolved automatically',
+                default => null,
+            };
+        };
     @endphp
 
     @include('error-tracker::partials.page-header', [
@@ -219,6 +231,12 @@
                                     </span>
                                 @endif
                             </div>
+
+                            @if ($label = $resolvedByLabel($issue))
+                                <div class="issue-meta-line" style="margin-top: 6px;">
+                                    {{ $label }}
+                                </div>
+                            @endif
                         </td>
 
                         <td>

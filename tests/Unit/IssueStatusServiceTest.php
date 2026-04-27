@@ -25,6 +25,7 @@ it('can resolve reopen ignore mute and unmute an issue', function () {
 
     expect($resolved->status)->toBe('resolved')
         ->and($resolved->resolved_at)->not->toBeNull()
+        ->and($resolved->resolved_by_type)->toBe('manual')
         ->and($resolved->ignored_at)->toBeNull()
         ->and($resolved->muted_until)->toBeNull();
 
@@ -32,6 +33,8 @@ it('can resolve reopen ignore mute and unmute an issue', function () {
 
     expect($reopened->status)->toBe('open')
         ->and($reopened->resolved_at)->toBeNull()
+        ->and($reopened->resolved_by_type)->toBeNull()
+        ->and($reopened->resolved_reason)->toBeNull()
         ->and($reopened->ignored_at)->toBeNull();
 
     $ignored = $service->ignore($reopened);
@@ -54,4 +57,53 @@ it('can resolve reopen ignore mute and unmute an issue', function () {
     expect($unmuted->status)->toBe('open')
         ->and($unmuted->muted_until)->toBeNull()
         ->and($unmuted->mute_reason)->toBeNull();
+});
+
+it('sets manual resolution metadata', function () {
+    $issue = Issue::query()->create([
+        'fingerprint' => sha1('manual-resolution-test'),
+        'title' => 'Manual resolution test',
+        'level' => 'error',
+        'status' => 'open',
+        'environment' => 'testing',
+        'exception_class' => RuntimeException::class,
+        'message_sample' => 'Something failed',
+        'first_seen_at' => now(),
+        'last_seen_at' => now(),
+        'total_events' => 1,
+        'affected_users' => 0,
+    ]);
+
+    $resolved = app(IssueStatusService::class)->resolveManually($issue, 'Fixed in deploy');
+
+    expect($resolved->status)->toBe('resolved')
+        ->and($resolved->resolved_at)->not->toBeNull()
+        ->and($resolved->resolved_by_type)->toBe('manual')
+        ->and($resolved->resolved_reason)->toBe('Fixed in deploy');
+});
+
+it('cleans resolution metadata when reopening', function () {
+    $issue = Issue::query()->create([
+        'fingerprint' => sha1('reopen-resolution-test'),
+        'title' => 'Reopen resolution test',
+        'level' => 'error',
+        'status' => 'resolved',
+        'environment' => 'testing',
+        'exception_class' => RuntimeException::class,
+        'message_sample' => 'Something failed',
+        'first_seen_at' => now()->subDays(10),
+        'last_seen_at' => now()->subDays(10),
+        'total_events' => 1,
+        'affected_users' => 0,
+        'resolved_at' => now(),
+        'resolved_by_type' => 'auto',
+        'resolved_reason' => 'Automatically resolved after 14 days without new events.',
+    ]);
+
+    $reopened = app(IssueStatusService::class)->reopen($issue);
+
+    expect($reopened->status)->toBe('open')
+        ->and($reopened->resolved_at)->toBeNull()
+        ->and($reopened->resolved_by_type)->toBeNull()
+        ->and($reopened->resolved_reason)->toBeNull();
 });

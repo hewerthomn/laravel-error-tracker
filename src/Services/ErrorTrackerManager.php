@@ -16,6 +16,7 @@ class ErrorTrackerManager implements ExceptionRecorder
         protected FingerprintGenerator $fingerprintGenerator,
         protected SensitiveDataSanitizer $sanitizer,
         protected TrendAggregator $trendAggregator,
+        protected IssueStatusService $issueStatusService,
     ) {}
 
     public function record(Throwable $throwable, array $context = []): RecordedEventResult
@@ -50,9 +51,7 @@ class ErrorTrackerManager implements ExceptionRecorder
 
                 $issueWasCreated = true;
             } elseif ($issue->status === 'resolved') {
-                $issue->status = 'open';
-                $issue->resolved_at = null;
-                $issue->save();
+                $issue = $this->issueStatusService->reopen($issue);
 
                 $issueWasReactivated = true;
             }

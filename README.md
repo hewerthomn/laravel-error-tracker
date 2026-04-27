@@ -18,6 +18,7 @@ A Laravel-first error tracking package with a built-in dashboard, local persiste
   * ignore
   * mute
   * unmute
+* Optional auto resolve for stale open issues
 * Hourly trend aggregation
 * Mail and Slack notifications for new and reactivated issues
 * Optional custom production error page
@@ -199,6 +200,39 @@ Important options include:
 * `error_page.enabled`
 * `feedback.enabled`
 * `retention.events_days`
+* `auto_resolve.enabled`
+* `auto_resolve.after_days`
+
+## Auto Resolve
+
+Auto Resolve can close stale open issues when they have not received new events for a configured number of days. The feature is disabled by default.
+
+Default configuration:
+
+```php
+'auto_resolve' => [
+    'enabled' => env('ERROR_TRACKER_AUTO_RESOLVE_ENABLED', false),
+    'after_days' => env('ERROR_TRACKER_AUTO_RESOLVE_AFTER_DAYS', 14),
+    'statuses' => ['open'],
+    'levels' => ['warning', 'error'],
+    'environments' => null,
+    'reason' => 'Automatically resolved after :days days without new events.',
+],
+```
+
+Example scheduler registration:
+
+```php
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('error-tracker:auto-resolve')->daily();
+```
+
+Preview eligible issues without changing the database:
+
+```bash
+php artisan error-tracker:auto-resolve --dry-run
+```
 
 ## Shared Database / Multi-App Setup
 
@@ -255,10 +289,22 @@ Prune old data:
 php artisan error-tracker:prune
 ```
 
+Auto resolve stale issues:
+
+```bash
+php artisan error-tracker:auto-resolve
+```
+
 Dry run:
 
 ```bash
 php artisan error-tracker:prune --dry-run
+```
+
+Auto resolve dry run:
+
+```bash
+php artisan error-tracker:auto-resolve --dry-run
 ```
 
 ## Development

@@ -86,6 +86,14 @@
 
             return new \Illuminate\Support\HtmlString($html);
         };
+
+        $resolvedByLabel = $event->issue->status === 'resolved'
+            ? match ($event->issue->resolved_by_type) {
+                'manual' => 'resolved manually',
+                'auto' => 'resolved automatically',
+                default => null,
+            }
+            : null;
     @endphp
 
     @include('error-tracker::partials.page-header', [
@@ -173,6 +181,9 @@
                     <span class="badge {{ $statusBadgeClass }}">{{ $event->issue->status }}</span>
                     <span class="muted">Issue #{{ $event->issue->id }}</span>
                     <span class="muted">{{ number_format($event->issue->total_events) }} events</span>
+                    @if ($resolvedByLabel)
+                        <span class="muted">{{ $resolvedByLabel }}</span>
+                    @endif
                 </div>
 
                 <div>

@@ -209,6 +209,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Auto resolve
+    |--------------------------------------------------------------------------
+    |
+    | Automatically resolves stale open issues that have not received new
+    | events after the configured number of days. Disabled by default.
+    |
+    */
+    'auto_resolve' => [
+        'enabled' => env('ERROR_TRACKER_AUTO_RESOLVE_ENABLED', false),
+        'after_days' => env('ERROR_TRACKER_AUTO_RESOLVE_AFTER_DAYS', 14),
+        'statuses' => ['open'],
+        'levels' => ['warning', 'error'],
+        'environments' => null,
+        'reason' => 'Automatically resolved after :days days without new events.',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Sensitive data redaction
     |--------------------------------------------------------------------------
     */
