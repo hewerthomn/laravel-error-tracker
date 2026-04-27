@@ -132,6 +132,42 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Stack trace presentation
+    |--------------------------------------------------------------------------
+    */
+    'stacktrace' => [
+        'smart_grouping' => true,
+
+        'project_paths' => [
+            app_path(),
+            base_path('routes'),
+            base_path('database'),
+            base_path('config'),
+            base_path('packages'),
+            base_path('modules'),
+        ],
+
+        'project_namespaces' => [
+            'App\\',
+            'Database\\',
+        ],
+
+        'non_project_paths' => [
+            base_path('vendor'),
+            base_path('storage/framework'),
+            base_path('bootstrap/cache'),
+        ],
+
+        'collapse_non_project_frames' => true,
+
+        'show_source_context' => true,
+        'source_context_lines' => 5,
+
+        'store_arguments' => false,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Fingerprint normalization
     |--------------------------------------------------------------------------
     |

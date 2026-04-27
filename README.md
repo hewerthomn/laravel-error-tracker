@@ -25,6 +25,7 @@ A Laravel-first error tracking package with a built-in dashboard, local persiste
 * Optional end-user feedback form linked to recorded events
 * Configurable dashboard navigation back to the host application
 * Optional shared tracker database connection for multiple applications or environments
+* Smart stack trace grouping with project frame highlighting
 
 ## Requirements
 
@@ -202,6 +203,46 @@ Important options include:
 * `retention.events_days`
 * `auto_resolve.enabled`
 * `auto_resolve.after_days`
+* `stacktrace.smart_grouping`
+* `stacktrace.project_paths`
+* `stacktrace.project_namespaces`
+* `stacktrace.non_project_paths`
+* `stacktrace.store_arguments`
+
+## Smart Stack Trace
+
+The event detail page highlights frames that belong to your project and groups consecutive framework, vendor, internal, or unknown frames into collapsed non-project blocks. This keeps the most useful application code visible while still allowing framework/vendor details to be expanded when needed.
+
+By default, project frames are detected from common Laravel paths and namespaces:
+
+```php
+'stacktrace' => [
+    'smart_grouping' => true,
+    'project_paths' => [
+        app_path(),
+        base_path('routes'),
+        base_path('database'),
+        base_path('config'),
+        base_path('packages'),
+        base_path('modules'),
+    ],
+    'project_namespaces' => [
+        'App\\',
+        'Database\\',
+    ],
+    'non_project_paths' => [
+        base_path('vendor'),
+        base_path('storage/framework'),
+        base_path('bootstrap/cache'),
+    ],
+    'collapse_non_project_frames' => true,
+    'show_source_context' => true,
+    'source_context_lines' => 5,
+    'store_arguments' => false,
+],
+```
+
+Function arguments are not stored or displayed by default for security. Keep `stacktrace.store_arguments` disabled unless you have reviewed the privacy impact for request payloads, tokens, cookies, and other sensitive values.
 
 ## Auto Resolve
 

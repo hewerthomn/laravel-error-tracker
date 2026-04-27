@@ -3,11 +3,12 @@
 namespace Hewerthomn\ErrorTracker\Http\Controllers;
 
 use Hewerthomn\ErrorTracker\Models\Event;
+use Hewerthomn\ErrorTracker\Support\StackTracePresenter;
 use Illuminate\Routing\Controller;
 
 class EventController extends Controller
 {
-    public function show(Event $event)
+    public function show(Event $event, StackTracePresenter $stackTracePresenter)
     {
         $event->load(['issue', 'feedback']);
 
@@ -16,6 +17,7 @@ class EventController extends Controller
 
         return view($view, [
             'event' => $event,
+            'stackTrace' => $stackTracePresenter->present($event->trace_json),
         ]);
     }
 }

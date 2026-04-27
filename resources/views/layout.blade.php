@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'Error Tracker' }}</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
         :root {
@@ -28,6 +29,10 @@
 
         * {
             box-sizing: border-box;
+        }
+
+        [x-cloak] {
+            display: none !important;
         }
 
         html, body {
@@ -945,28 +950,191 @@
           display: none;
       }
 
-      .stack-frame {
+      .stacktrace-shell {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+      }
+
+      .stacktrace-summary {
+          display: flex;
+          justify-content: space-between;
+          gap: 18px;
+          align-items: flex-start;
+          padding: 16px;
           border: 1px solid var(--border);
-          border-radius: 14px;
+          border-radius: 12px;
+          background: #ffffff;
+      }
+
+      .stacktrace-exception {
+          font-weight: 800;
+          color: var(--text);
+          word-break: break-word;
+      }
+
+      .stacktrace-message {
+          margin-top: 6px;
+          color: var(--muted);
+          line-height: 1.6;
+          word-break: break-word;
+      }
+
+      .stacktrace-order {
+          flex: 0 0 auto;
+          color: var(--muted);
+          font-size: 12px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+      }
+
+      .first-project-frame {
+          padding: 10px 12px;
+          border: 1px solid #bfdbfe;
+          border-radius: 10px;
+          background: #eff6ff;
+          color: #1e3a8a;
+          font-size: 13px;
+          font-weight: 700;
+      }
+
+      .stacktrace-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+      }
+
+      .stacktrace-frame,
+      .stacktrace-group {
+          border: 1px solid var(--border);
+          border-radius: 10px;
           background: #ffffff;
           overflow: hidden;
       }
 
-      .stack-frame > summary {
-          cursor: pointer;
-          list-style: none;
-          padding: 14px 16px;
-          font-weight: 700;
+      .stacktrace-frame {
+          padding: 12px 14px;
+      }
+
+      .stacktrace-frame-project {
+          border-color: #bfdbfe;
+          box-shadow: inset 3px 0 0 #2563eb;
+      }
+
+      .stacktrace-frame-muted {
           background: #f8fafc;
-          border-bottom: 1px solid var(--border);
+          border-radius: 0;
+          border-width: 1px 0 0;
       }
 
-      .stack-frame > summary::-webkit-details-marker {
-          display: none;
+      .stacktrace-frame-muted:first-child {
+          border-top-width: 0;
       }
 
-      .stack-frame-body {
-          padding: 16px;
+      .stacktrace-frame-main {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+          flex-wrap: wrap;
+      }
+
+      .stacktrace-index,
+      .stacktrace-classification {
+          display: inline-flex;
+          align-items: center;
+          min-height: 22px;
+          padding: 3px 7px;
+          border-radius: 999px;
+          background: #f1f5f9;
+          color: #475569;
+          font-size: 11px;
+          font-weight: 800;
+          line-height: 1;
+      }
+
+      .stacktrace-classification {
+          text-transform: lowercase;
+      }
+
+      .stacktrace-callable {
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-size: 13px;
+          font-weight: 800;
+          color: var(--text);
+          word-break: break-word;
+      }
+
+      .stacktrace-location {
+          margin-top: 7px;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-size: 12px;
+          color: var(--muted);
+          word-break: break-word;
+      }
+
+      .stacktrace-group-toggle {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 12px;
+          border: 0;
+          background: #f8fafc;
+          color: var(--muted);
+          font: inherit;
+          font-size: 13px;
+          font-weight: 800;
+          cursor: pointer;
+          text-align: left;
+      }
+
+      .stacktrace-caret {
+          width: 16px;
+          color: #475569;
+      }
+
+      .stacktrace-group-frames {
+          border-top: 1px solid var(--border);
+      }
+
+      .source-context {
+          margin-top: 12px;
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          overflow: hidden;
+          background: #0f172a;
+      }
+
+      .source-line {
+          display: grid;
+          grid-template-columns: 52px 1fr;
+          gap: 10px;
+          min-height: 24px;
+          color: #cbd5e1;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-size: 12px;
+          line-height: 1.6;
+      }
+
+      .source-line.is-highlighted {
+          background: rgba(37, 99, 235, 0.35);
+          color: #ffffff;
+      }
+
+      .source-line-number {
+          padding: 2px 8px;
+          text-align: right;
+          color: #94a3b8;
+          user-select: none;
+      }
+
+      .source-line pre {
+          margin: 0;
+          padding: 2px 10px 2px 0;
+          white-space: pre-wrap;
+          word-break: break-word;
+          font: inherit;
       }
 
       .compact-issue-reference {
@@ -1006,6 +1174,10 @@
 
           .kv-row {
               grid-template-columns: 1fr;
+          }
+
+          .stacktrace-summary {
+              flex-direction: column;
           }
       }
       .page-breadcrumbs {

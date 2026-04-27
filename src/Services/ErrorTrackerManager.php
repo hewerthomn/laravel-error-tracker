@@ -256,13 +256,22 @@ class ErrorTrackerManager implements ExceptionRecorder
         $frames = array_slice($trace, 0, $maxFrames);
 
         return array_map(function (array $frame): array {
-            return [
+            $normalized = [
                 'file' => $frame['file'] ?? null,
                 'line' => $frame['line'] ?? null,
                 'function' => $frame['function'] ?? null,
                 'class' => $frame['class'] ?? null,
                 'type' => $frame['type'] ?? null,
             ];
+
+            if (config('error-tracker.stacktrace.store_arguments', false)) {
+                $normalized['args'] = array_map(
+                    fn (mixed $argument): string => is_object($argument) ? $argument::class : gettype($argument),
+                    is_array($frame['args'] ?? null) ? $frame['args'] : []
+                );
+            }
+
+            return $normalized;
         }, $frames);
     }
 

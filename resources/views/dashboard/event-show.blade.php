@@ -28,7 +28,9 @@
         $sourceLabel = $event->route_name
             ?: ($event->request_path ?: ($event->command_name ?: ($event->job_name ?: 'Unknown source')));
 
-        $traceFrames = is_array($event->trace_json) ? $event->trace_json : [];
+        $stackTrace = $stackTrace ?? ['frames' => [], 'first_project_frame' => null, 'has_frames' => false];
+        $stackEntries = $stackTrace['frames'] ?? [];
+        $firstProjectFrame = $stackTrace['first_project_frame'] ?? null;
         $headersData = is_array($event->headers_json) ? $event->headers_json : [];
         $contextData = is_array($event->context_json) ? $event->context_json : [];
 
@@ -300,38 +302,81 @@
                 </div>
 
                 <div id="event-stack" class="tab-panel">
-                @if (count($traceFrames) > 0)
-                    <div class="stack">
-                        @foreach ($traceFrames as $index => $frame)
-                            <details class="stack-frame" @if ($index === 0) open @endif>
-                                <summary>
-                                    #{{ $index }}
-                                    —
-                                    {{ $frame['class'] ?? '' }}{{ $frame['type'] ?? '' }}{{ $frame['function'] ?? 'unknown' }}
-                                </summary>
+                @if ($stackTrace['has_frames'] ?? false)
+                    <div class="stacktrace-shell">
+                        <div class="stacktrace-summary">
+                            <div>
+                                <div class="section-label">Exception summary</div>
+                                <div class="stacktrace-exception">{{ $event->exception_class ?: 'Unknown exception' }}</div>
+                                <div class="stacktrace-message">{{ $event->message ?: 'No message available.' }}</div>
+                            </div>
 
-                                <div class="stack-frame-body">
-                                    <div class="stack">
-                                        <div class="panel-soft">
-                                            <div class="field-group">
-                                                <span class="field-label">File</span>
-                                                <div>{{ $frame['file'] ?? '—' }}</div>
-                                            </div>
+                            <div class="stacktrace-order">Most recent call first</div>
+                        </div>
 
-                                            <div class="field-group" style="margin-top: 12px;">
-                                                <span class="field-label">Line</span>
-                                                <div>{{ $frame['line'] ?? '—' }}</div>
-                                            </div>
+                        @if ($firstProjectFrame)
+                            <div class="first-project-frame">
+                                First project frame:
+                                <span class="mono-inline">
+                                    {{ $firstProjectFrame['relative_file'] ?? $firstProjectFrame['file'] ?? 'unknown file' }}@if($firstProjectFrame['line']):{{ $firstProjectFrame['line'] }}@endif
+                                </span>
+                            </div>
+                        @endif
 
-                                            <div class="field-group" style="margin-top: 12px;">
-                                                <span class="field-label">Callable</span>
-                                                <div>{{ $frame['class'] ?? '' }}{{ $frame['type'] ?? '' }}{{ $frame['function'] ?? 'unknown' }}</div>
-                                            </div>
+                        <div class="stacktrace-list">
+                            @foreach ($stackEntries as $entry)
+                                @if (($entry['type'] ?? null) === 'group')
+                                    <div
+                                        class="stacktrace-group"
+                                        x-data="{ open: {{ ($entry['collapsed'] ?? true) ? 'false' : 'true' }} }"
+                                    >
+                                        <button type="button" class="stacktrace-group-toggle" @click="open = ! open">
+                                            <span class="stacktrace-caret" x-text="open ? '▾' : '▸'"></span>
+                                            <span>{{ $entry['label'] ?? 'Non-project frames' }}</span>
+                                            <span class="stacktrace-classification">{{ $entry['classification'] ?? 'non_project' }}</span>
+                                        </button>
+
+                                        <div class="stacktrace-group-frames" x-show="open" x-cloak>
+                                            @foreach (($entry['frames'] ?? []) as $frame)
+                                                <div class="stacktrace-frame stacktrace-frame-muted">
+                                                    <div class="stacktrace-frame-main">
+                                                        <span class="stacktrace-index">#{{ $frame['index'] ?? $loop->index }}</span>
+                                                        <span class="stacktrace-callable">{{ $frame['callable'] ?? 'unknown' }}</span>
+                                                    </div>
+
+                                                    <div class="stacktrace-location">
+                                                        {{ $frame['relative_file'] ?? $frame['file'] ?? 'internal' }}@if($frame['line']):{{ $frame['line'] }}@endif
+                                                    </div>
+                                                </div>
+                                            @endforeach
                                         </div>
                                     </div>
-                                </div>
-                            </details>
-                        @endforeach
+                                @else
+                                    <div class="stacktrace-frame stacktrace-frame-project">
+                                        <div class="stacktrace-frame-main">
+                                            <span class="stacktrace-index">#{{ $entry['index'] ?? $loop->index }}</span>
+                                            <span class="stacktrace-callable">{{ $entry['callable'] ?? 'unknown' }}</span>
+                                            <span class="stacktrace-classification">project</span>
+                                        </div>
+
+                                        <div class="stacktrace-location">
+                                            {{ $entry['relative_file'] ?? $entry['file'] ?? 'unknown file' }}@if($entry['line']):{{ $entry['line'] }}@endif
+                                        </div>
+
+                                        @if (! empty($entry['source_context']))
+                                            <div class="source-context">
+                                                @foreach ($entry['source_context'] as $sourceLine)
+                                                    <div class="source-line @if($sourceLine['highlight']) is-highlighted @endif">
+                                                        <span class="source-line-number">{{ $sourceLine['number'] }}</span>
+                                                        <pre>{{ $sourceLine['content'] }}</pre>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
                     </div>
                 @else
                     <div class="kv-empty">No stack trace frames available.</div>
