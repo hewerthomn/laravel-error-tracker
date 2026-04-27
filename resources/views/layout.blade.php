@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'Error Tracker' }}</title>
+    @stack('head')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -742,6 +743,51 @@
           background: #ffffff;
           padding: 4px;
           box-shadow: var(--shadow-sm);
+      }
+
+      .issues-topbar-actions {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 10px;
+          min-width: 0;
+      }
+
+      .dashboard-header-actions {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 10px;
+          flex-wrap: wrap;
+      }
+
+      .diagnostics-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          min-height: 42px;
+          border: 1px solid var(--border-strong);
+          border-radius: 12px;
+          background: #ffffff;
+          color: #475569;
+          font-size: 13px;
+          font-weight: 900;
+          padding: 0 12px;
+          text-decoration: none;
+          box-shadow: var(--shadow-sm);
+      }
+
+      .diagnostics-link svg {
+          width: 16px;
+          height: 16px;
+      }
+
+      .diagnostics-link:hover {
+          color: #1d4ed8;
+          border-color: #bfdbfe;
+          background: #eff6ff;
+          text-decoration: none;
       }
 
       .sort-segment {
@@ -1823,6 +1869,224 @@
           align-items: center;
       }
 
+      .diagnostics-layout {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+      }
+
+      .diagnostics-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 14px;
+      }
+
+      .diagnostics-section {
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          background: #ffffff;
+          box-shadow: var(--shadow-sm);
+          overflow: hidden;
+      }
+
+      .diagnostics-section-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 12px 14px;
+          border-bottom: 1px solid var(--border);
+          background: #f8fafc;
+      }
+
+      .diagnostics-section-header h2 {
+          margin: 0;
+          color: var(--text);
+          font-size: 14px;
+          font-weight: 900;
+      }
+
+      .diagnostics-section-header p {
+          margin: 4px 0 0;
+          color: var(--muted);
+          font-size: 12px;
+          font-weight: 800;
+      }
+
+      .config-row-list {
+          display: flex;
+          flex-direction: column;
+          margin: 0;
+      }
+
+      .config-row {
+          display: grid;
+          grid-template-columns: minmax(160px, 0.38fr) minmax(0, 1fr);
+          gap: 12px;
+          padding: 10px 14px;
+          border-top: 1px solid #f1f5f9;
+          align-items: start;
+      }
+
+      .config-row:first-child {
+          border-top: 0;
+      }
+
+      .config-key {
+          color: var(--muted);
+          font-size: 12px;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+      }
+
+      .config-value {
+          min-width: 0;
+          color: var(--text);
+          font-size: 13px;
+          font-weight: 700;
+          word-break: break-word;
+          margin: 0;
+      }
+
+      .config-badge {
+          display: inline-flex;
+          align-items: center;
+          min-height: 22px;
+          border-radius: 999px;
+          padding: 3px 8px;
+          font-size: 11px;
+          font-weight: 900;
+          line-height: 1;
+          text-transform: lowercase;
+      }
+
+      .config-badge.is-success,
+      .config-badge.is-enabled {
+          background: #dcfce7;
+          color: #166534;
+      }
+
+      .config-badge.is-danger,
+      .config-badge.is-disabled {
+          background: #fee2e2;
+          color: #991b1b;
+      }
+
+      .config-badge.is-warning {
+          background: #fef3c7;
+          color: #92400e;
+      }
+
+      .config-badge.is-info {
+          background: #dbeafe;
+          color: #1e40af;
+      }
+
+      .config-badge.is-neutral,
+      .config-badge.is-muted {
+          background: #f1f5f9;
+          color: #475569;
+      }
+
+      .config-token-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+      }
+
+      .config-token {
+          display: inline-flex;
+          max-width: 100%;
+          border: 1px solid var(--border);
+          border-radius: 999px;
+          background: #f8fafc;
+          color: #334155;
+          font-size: 12px;
+          font-weight: 800;
+          padding: 4px 8px;
+          word-break: break-all;
+      }
+
+      .config-code {
+          display: inline-flex;
+          max-width: 100%;
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          background: #0f172a;
+          color: #e2e8f0;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-size: 12px;
+          font-weight: 700;
+          padding: 5px 7px;
+          white-space: pre-wrap;
+          word-break: break-word;
+      }
+
+      .config-muted {
+          color: var(--muted);
+          font-size: 12px;
+          font-weight: 800;
+      }
+
+      .diagnostics-table-wrap {
+          overflow-x: auto;
+      }
+
+      .diagnostics-health-table {
+          width: 100%;
+          border-collapse: collapse;
+      }
+
+      .diagnostics-health-table th,
+      .diagnostics-health-table td {
+          padding: 10px 14px;
+          border-top: 1px solid #f1f5f9;
+          text-align: left;
+          vertical-align: middle;
+          font-size: 13px;
+      }
+
+      .diagnostics-health-table th {
+          color: var(--muted);
+          background: #ffffff;
+          font-size: 11px;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+      }
+
+      .diagnostics-health-table td:first-child {
+          color: var(--text);
+          font-weight: 800;
+      }
+
+      .health-target {
+          display: inline-flex;
+          max-width: 100%;
+          color: #475569;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-size: 12px;
+          font-weight: 700;
+          word-break: break-all;
+      }
+
+      .scheduler-hints {
+          margin: 0;
+          padding: 14px;
+          background: #0f172a;
+          color: #e2e8f0;
+          overflow-x: auto;
+      }
+
+      .scheduler-hints code {
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-size: 12px;
+          font-weight: 700;
+          line-height: 1.7;
+          white-space: pre;
+      }
+
       .summary-grid-refined {
           display: grid;
           grid-template-columns: 1.3fr 0.9fr;
@@ -1843,6 +2107,23 @@
       @media (max-width: 900px) {
           .summary-grid-refined {
               grid-template-columns: 1fr;
+          }
+
+          .diagnostics-grid {
+              grid-template-columns: 1fr;
+          }
+
+          .config-row {
+              grid-template-columns: 1fr;
+          }
+
+          .issues-topbar-actions {
+              justify-content: flex-start;
+              flex-wrap: wrap;
+          }
+
+          .dashboard-header-actions {
+              justify-content: flex-start;
           }
 
           .kv-row {

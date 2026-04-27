@@ -1,5 +1,6 @@
 <?php
 
+use Hewerthomn\ErrorTracker\Http\Controllers\ConfigurationController;
 use Hewerthomn\ErrorTracker\Http\Controllers\DashboardController;
 use Hewerthomn\ErrorTracker\Http\Controllers\EventController;
 use Hewerthomn\ErrorTracker\Http\Controllers\FeedbackController;
@@ -25,6 +26,7 @@ Route::middleware(array_merge($middleware, ["can:{$gate}"]))
     ->as('error-tracker.')
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('index');
+        Route::get('/configuration', [ConfigurationController::class, 'show'])->name('configuration');
         Route::get('/issues/{issue}', [IssueController::class, 'show'])->name('issues.show');
         Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
 

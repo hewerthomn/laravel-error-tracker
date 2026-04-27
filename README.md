@@ -186,6 +186,20 @@ The dashboard also supports a configurable shortcut back to the host application
 
 The issues dashboard includes a left sidebar with quick filters for status, level, period, and environment. The main issue list includes search for errors, paths, or messages, plus sorting by recent, frequent, or oldest issues. Filter links preserve the current query string, and status and level filters show counts for the current dashboard slice.
 
+### Diagnostics page
+
+The read-only diagnostics page is available at:
+
+```text
+/error-tracker/configuration
+```
+
+If you customize `error-tracker.route.path`, the page follows that path, for example `/{custom-path}/configuration`.
+
+The page shows the effective Error Tracker configuration for capture, feedback, auto resolve, notifications, stack trace, retention, redaction, and database health checks. It also shows command and scheduler hints for maintenance tasks.
+
+Secrets are never displayed raw. Notification recipients, Slack webhook values, tokens, secrets, passwords, authorization headers, cookies, and API keys are rendered as `configured` or `not configured`.
+
 ## Configuration
 
 Main configuration file:

@@ -6,7 +6,7 @@
         'titleUrl' => route('error-tracker.index'),
         'subtitle' => $appName,
         'breadcrumbs' => [],
-        'actions' => 'error-tracker::dashboard.partials.period-filter',
+        'actions' => 'error-tracker::dashboard.partials.index-actions',
     ])
 
     <div class="issues-workspace">
