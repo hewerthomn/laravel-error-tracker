@@ -5,7 +5,7 @@
 /.idea
 /.vscode
 /node_modules
-/.DS_Store
+.DS_Store
 Thumbs.db
 coverage
 /build
