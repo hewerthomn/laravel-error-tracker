@@ -248,11 +248,12 @@ The demo command creates only records whose issue fingerprint starts with `demo:
 
 Recommended screenshots:
 
-* `docs/screenshots/dashboard.png`: dashboard with mixed statuses, levels, environments, and trends
+* `docs/screenshots/dashboard-index.png`: dashboard with mixed statuses, levels, environments, and trends
 * `docs/screenshots/issue-detail.png`: issue detail with trends and notification history
-* `docs/screenshots/event-detail.png`: smart stack trace with project frames and grouped vendor/framework frames
-* `docs/screenshots/feedback.png`: event detail showing user feedback
-* `docs/screenshots/diagnostics.png`: diagnostics page
+* `docs/screenshots/event-detail-smart-stacktrace.png`: smart stack trace with project frames and grouped vendor/framework frames
+* `docs/screenshots/configuration-diagnostics.png`: diagnostics page
+
+See `docs/screenshots/README.md` for the capture workflow, suggested resolution, and privacy checks.
 
 ### Dashboard quick filters
 

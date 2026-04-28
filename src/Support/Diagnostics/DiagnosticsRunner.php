@@ -146,14 +146,21 @@ class DiagnosticsRunner
 
     protected function configBooleanCheck(string $feature, bool $enabled): DiagnosticCheck
     {
+        $label = str($feature)
+            ->replace('_', ' ')
+            ->title()
+            ->toString();
+
         return new DiagnosticCheck(
             key: 'config.'.$feature.'.enabled',
-            label: $feature.' '.($enabled ? 'enabled' : 'disabled'),
+            label: $label,
             status: 'info',
-            target: 'error-tracker.'.$feature.'.enabled',
+            target: $feature === 'smart_stacktrace'
+                ? 'error-tracker.stacktrace.smart_grouping'
+                : 'error-tracker.'.$feature.'.enabled',
             description: $enabled ? 'Feature is enabled.' : 'Feature is disabled.',
             required: false,
-            feature: str_replace('_', ' ', $feature),
+            feature: $label,
         );
     }
 
@@ -164,7 +171,7 @@ class DiagnosticsRunner
 
         return new DiagnosticCheck(
             key: 'config.notifications.cooldown',
-            label: 'notification cooldown configured',
+            label: 'Notification Cooldown',
             status: 'info',
             target: 'error-tracker.notifications.cooldown_minutes',
             description: 'Cooldown: '.$minutes.' minute(s). Max per issue per hour: '.$maxPerHour.'.',
@@ -177,11 +184,11 @@ class DiagnosticsRunner
     {
         return new DiagnosticCheck(
             key: 'scheduler.auto_resolve',
-            label: 'auto resolve scheduler',
+            label: 'Maintenance scheduler',
             status: 'info',
             target: 'routes/console.php',
-            description: 'If Auto Resolve is enabled, schedule error-tracker:auto-resolve to run daily.',
-            fixCommand: 'Schedule::command(\'error-tracker:auto-resolve\')->daily();',
+            description: 'Scheduler registration is not reliably auto-detected. Run php artisan schedule:list to confirm.',
+            fixCommand: "Schedule::command('error-tracker:auto-resolve')->daily();\nSchedule::command('error-tracker:prune')->daily();",
             required: false,
             feature: 'Scheduler',
         );
