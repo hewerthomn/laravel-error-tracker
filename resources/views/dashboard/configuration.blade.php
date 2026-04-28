@@ -150,12 +150,14 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="et-table min-w-full">
+                <table class="diagnostics-health-table et-table min-w-full">
                     <thead>
                         <tr>
                             <th class="whitespace-nowrap px-4 py-2.5 text-left text-[11px] font-black uppercase tracking-wider text-slate-500">Check</th>
                             <th class="whitespace-nowrap px-4 py-2.5 text-left text-[11px] font-black uppercase tracking-wider text-slate-500">Target</th>
                             <th class="whitespace-nowrap px-4 py-2.5 text-left text-[11px] font-black uppercase tracking-wider text-slate-500">Status</th>
+                            <th class="whitespace-nowrap px-4 py-2.5 text-left text-[11px] font-black uppercase tracking-wider text-slate-500">Details</th>
+                            <th class="whitespace-nowrap px-4 py-2.5 text-left text-[11px] font-black uppercase tracking-wider text-slate-500">Fix</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -171,6 +173,19 @@
                                         $healthLabel = $healthStatus === 'ok' ? 'OK' : \Illuminate\Support\Str::headline($healthStatus);
                                     @endphp
                                     {!! $badge($healthLabel, (string) ($check['tone'] ?? 'neutral')) !!}
+                                </td>
+                                <td class="px-4 py-2.5">
+                                    <div class="text-sm font-semibold text-slate-700">{{ $check['description'] ?? '—' }}</div>
+                                    @if (! empty($check['feature']))
+                                        <div class="mt-1 text-xs font-bold text-slate-500">Required by: {{ $check['feature'] }}</div>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-2.5">
+                                    @if (! empty($check['fix_command']) && ($check['status'] ?? null) === 'missing')
+                                        <pre class="m-0 whitespace-pre-wrap rounded-md bg-slate-950 px-2 py-1.5 text-xs font-bold leading-5 text-slate-100"><code>{{ $check['fix_command'] }}</code></pre>
+                                    @else
+                                        <span class="text-sm font-semibold text-slate-400">—</span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

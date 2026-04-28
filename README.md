@@ -46,7 +46,22 @@ Publish configuration and migrations:
 ```bash
 php artisan error-tracker:install
 php artisan migrate
+php artisan error-tracker:doctor
 ```
+
+## Updating the package
+
+New Error Tracker features can add database migrations. After updating the package, publish any new migrations, run them, clear optimized config, and run diagnostics:
+
+```bash
+composer update hewerthomn/laravel-error-tracker -W
+php artisan vendor:publish --tag=error-tracker-migrations
+php artisan migrate
+php artisan optimize:clear
+php artisan error-tracker:doctor
+```
+
+Examples of features that add schema are Auto Resolve metadata and Notification Cooldown history.
 
 ## Basic Setup
 
@@ -486,6 +501,12 @@ Auto resolve stale issues:
 
 ```bash
 php artisan error-tracker:auto-resolve
+```
+
+Run upgrade and configuration diagnostics:
+
+```bash
+php artisan error-tracker:doctor
 ```
 
 Dry run:

@@ -2,6 +2,7 @@
 
 use Hewerthomn\ErrorTracker\Tests\TestCase;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 
 it('allows authorized users to access the configuration page', function () {
     Gate::define('viewErrorTracker', fn ($user = null): bool => true);
@@ -77,21 +78,36 @@ it('renders health checks and config cached status', function () {
     /** @var TestCase $this */
     $this->get(route('error-tracker.configuration'))
         ->assertOk()
-        ->assertSee('error_tracker_issues table exists')
-        ->assertSee('error_tracker_events table exists')
-        ->assertSee('error_tracker_issue_trends table exists')
-        ->assertSee('error_tracker_issue_notifications table exists')
-        ->assertSee('error_tracker_feedback table exists')
-        ->assertSee('resolved_by_type column exists')
-        ->assertSee('resolved_reason column exists')
-        ->assertSee('command error-tracker:auto-resolve available')
-        ->assertSee('command error-tracker:prune available')
-        ->assertSee('config cached')
+        ->assertSee('error_tracker_issues table')
+        ->assertSee('error_tracker_events table')
+        ->assertSee('error_tracker_issue_trends table')
+        ->assertSee('error_tracker_issue_notifications table')
+        ->assertSee('error_tracker_feedback table')
+        ->assertSee('error_tracker_issues.resolved_by_type column')
+        ->assertSee('error_tracker_issues.resolved_reason column')
+        ->assertSee('error-tracker:auto-resolve command')
+        ->assertSee('error-tracker:prune command')
+        ->assertSee('error-tracker:doctor command')
+        ->assertSee('config cache')
         ->assertSee('diagnostics-health-table', false)
         ->assertSee('config-badge', false)
         ->assertSee('OK')
-        ->assertSee('Available')
-        ->assertSee(app()->configurationIsCached() ? 'Yes' : 'No');
+        ->assertSee('Info')
+        ->assertSee(app()->configurationIsCached() ? 'cached' : 'not cached');
+});
+
+it('shows missing diagnostics and fix command when notification history table is absent', function () {
+    Gate::define('viewErrorTracker', fn ($user = null): bool => true);
+    Schema::dropIfExists('error_tracker_issue_notifications');
+
+    /** @var TestCase $this */
+    $this->get(route('error-tracker.configuration'))
+        ->assertOk()
+        ->assertSee('Missing table: error_tracker_issue_notifications')
+        ->assertSee('Required by: Notification Cooldown')
+        ->assertSee('php artisan vendor:publish --tag=error-tracker-migrations')
+        ->assertSee('php artisan migrate')
+        ->assertSee('Missing');
 });
 
 it('renders a breadcrumb link back to issues', function () {

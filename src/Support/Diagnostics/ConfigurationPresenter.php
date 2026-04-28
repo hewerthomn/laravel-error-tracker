@@ -2,17 +2,15 @@
 
 namespace Hewerthomn\ErrorTracker\Support\Diagnostics;
 
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Schema;
-
 class ConfigurationPresenter
 {
     public function __construct(
         protected SecretMasker $secretMasker,
+        protected DiagnosticsRunner $diagnostics,
     ) {}
 
     /**
-     * @return array{sections: array<int, array{title: string, rows: array<int, array{label: string, value: mixed, type: string, status?: string}>}>, health_checks: array<int, array{label: string, ok: bool, status: string, detail: string|null, tone: string}>, scheduler_hints: array<int, string>}
+     * @return array{sections: array<int, array{title: string, rows: array<int, array{label: string, value: mixed, type: string, status?: string}>}>, health_checks: array<int, array{key: string, label: string, status: string, target: string, description: string, fix_command: string|null, required: bool, feature: string|null, tone: string, ok: bool, detail: string}>, scheduler_hints: array<int, string>}
      */
     public function present(): array
     {
@@ -165,87 +163,14 @@ class ConfigurationPresenter
     }
 
     /**
-     * @return array<int, array{label: string, ok: bool, status: string, detail: string|null, tone: string}>
+     * @return array<int, array{key: string, label: string, status: string, target: string, description: string, fix_command: string|null, required: bool, feature: string|null, tone: string, ok: bool, detail: string}>
      */
     protected function healthChecks(): array
     {
-        $configCached = $this->configurationIsCached();
-
-        return [
-            $this->tableCheck('error_tracker_issues table exists', 'error_tracker_issues'),
-            $this->tableCheck('error_tracker_events table exists', 'error_tracker_events'),
-            $this->tableCheck('error_tracker_issue_trends table exists', 'error_tracker_issue_trends'),
-            $this->tableCheck('error_tracker_issue_notifications table exists', 'error_tracker_issue_notifications'),
-            $this->tableCheck('error_tracker_feedback table exists', 'error_tracker_feedback'),
-            $this->columnCheck('resolved_by_type column exists', 'error_tracker_issues', 'resolved_by_type'),
-            $this->columnCheck('resolved_reason column exists', 'error_tracker_issues', 'resolved_reason'),
-            $this->commandCheck('command error-tracker:auto-resolve available', 'error-tracker:auto-resolve'),
-            $this->commandCheck('command error-tracker:prune available', 'error-tracker:prune'),
-            [
-                'label' => 'config cached',
-                'ok' => true,
-                'status' => $configCached ? 'yes' : 'no',
-                'detail' => 'Laravel config cache',
-                'tone' => $configCached ? 'success' : 'neutral',
-            ],
-        ];
-    }
-
-    /**
-     * @return array{label: string, ok: bool, status: string, detail: string|null, tone: string}
-     */
-    protected function tableCheck(string $label, string $table): array
-    {
-        $ok = Schema::connection($this->connectionName())->hasTable($table);
-
-        return [
-            'label' => $label,
-            'ok' => $ok,
-            'status' => $ok ? 'ok' : 'missing',
-            'detail' => $table,
-            'tone' => $ok ? 'success' : 'danger',
-        ];
-    }
-
-    /**
-     * @return array{label: string, ok: bool, status: string, detail: string|null, tone: string}
-     */
-    protected function columnCheck(string $label, string $table, string $column): array
-    {
-        $schema = Schema::connection($this->connectionName());
-        $ok = $schema->hasTable($table) && $schema->hasColumn($table, $column);
-
-        return [
-            'label' => $label,
-            'ok' => $ok,
-            'status' => $ok ? 'ok' : 'missing',
-            'detail' => $table.'.'.$column,
-            'tone' => $ok ? 'success' : 'danger',
-        ];
-    }
-
-    /**
-     * @return array{label: string, ok: bool, status: string, detail: string|null, tone: string}
-     */
-    protected function commandCheck(string $label, string $command): array
-    {
-        $commands = Artisan::all();
-        $ok = array_key_exists($command, $commands);
-
-        return [
-            'label' => $label,
-            'ok' => $ok,
-            'status' => $ok ? 'available' : 'missing',
-            'detail' => $command,
-            'tone' => $ok ? 'success' : 'danger',
-        ];
-    }
-
-    protected function connectionName(): ?string
-    {
-        $connection = config('error-tracker.database.connection');
-
-        return is_string($connection) && trim($connection) !== '' ? $connection : null;
+        return collect($this->diagnostics->run())
+            ->map(fn (DiagnosticCheck $check): array => $check->toArray())
+            ->values()
+            ->all();
     }
 
     protected function configurationIsCached(): bool

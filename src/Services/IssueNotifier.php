@@ -9,6 +9,7 @@ use Hewerthomn\ErrorTracker\Notifications\IssueTriggeredNotification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 class IssueNotifier
@@ -29,6 +30,16 @@ class IssueNotifier
         $channels = array_keys($routes);
 
         if ($channels === []) {
+            return;
+        }
+
+        if (! $this->notificationHistoryTableExists()) {
+            Log::warning('Error Tracker notification cooldown history table is missing; skipping notification.', [
+                'table' => 'error_tracker_issue_notifications',
+                'issue_id' => $result->issue->id,
+                'trigger' => $trigger,
+            ]);
+
             return;
         }
 
@@ -174,5 +185,27 @@ class IssueNotifier
         $value = (int) $value;
 
         return $value > 0 ? $value : null;
+    }
+
+    protected function notificationHistoryTableExists(): bool
+    {
+        try {
+            return Schema::connection($this->connectionName())->hasTable('error_tracker_issue_notifications');
+        } catch (Throwable $exception) {
+            Log::warning('Error Tracker could not inspect notification cooldown history table.', [
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+                'table' => 'error_tracker_issue_notifications',
+            ]);
+
+            return false;
+        }
+    }
+
+    protected function connectionName(): ?string
+    {
+        $connection = config('error-tracker.database.connection');
+
+        return is_string($connection) && trim($connection) !== '' ? $connection : null;
     }
 }

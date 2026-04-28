@@ -3,6 +3,8 @@
 use Hewerthomn\ErrorTracker\Actions\RecordThrowableAction;
 use Hewerthomn\ErrorTracker\Contracts\ExceptionRecorder;
 use Hewerthomn\ErrorTracker\Data\RecordedEventResult;
+use Hewerthomn\ErrorTracker\Models\Event;
+use Hewerthomn\ErrorTracker\Models\Issue;
 use Hewerthomn\ErrorTracker\Models\IssueNotification;
 use Hewerthomn\ErrorTracker\Services\IssueNotifier;
 use Hewerthomn\ErrorTracker\Services\IssueStatusService;
@@ -10,6 +12,7 @@ use Hewerthomn\ErrorTracker\Tests\TestCase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Schema;
 
 beforeEach(function (): void {
     Carbon::setTestNow(Carbon::parse('2026-04-28 12:00:00'));
@@ -131,6 +134,19 @@ it('updates notification history after notification is sent', function () {
     expect($notification)->not->toBeNull()
         ->and($notification->issue_id)->toBe($result->issue->id)
         ->and($notification->sent_at?->format('Y-m-d H:i:s'))->toBe('2026-04-28 12:00:00');
+});
+
+it('does not throw when notification history table is missing and capture continues', function () {
+    Notification::fake();
+    Schema::dropIfExists('error_tracker_issue_notifications');
+
+    $result = recordNotificationCooldownThrowable();
+
+    expect($result)->not->toBeNull()
+        ->and(Issue::query()->count())->toBe(1)
+        ->and(Event::query()->count())->toBe(1);
+
+    Notification::assertNothingSent();
 });
 
 it('shows notification metadata on the issue detail page', function () {
