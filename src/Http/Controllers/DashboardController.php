@@ -3,20 +3,20 @@
 namespace Hewerthomn\ErrorTracker\Http\Controllers;
 
 use Hewerthomn\ErrorTracker\Models\Issue;
+use Hewerthomn\ErrorTracker\Support\Dashboard\IssueSearchParser;
+use Hewerthomn\ErrorTracker\Support\Dashboard\IssueSearchQuery;
 use Hewerthomn\ErrorTracker\Support\Dashboard\QueryStringBuilder;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, IssueSearchParser $searchParser, IssueSearchQuery $issueSearchQuery)
     {
-        $levels = $this->selectedLevels($request);
-        $statuses = $this->selectedStatuses($request);
-        $period = $this->selectedPeriod($request);
-        $sort = $this->selectedSort($request);
-        $search = $this->selectedSearch($request);
+        $queryText = $request->query->has('q')
+            ? $request->string('q')->toString()
+            : $request->string('search')->toString();
+        $search = $searchParser->parse($queryText, $request->query());
 
         $query = Issue::query()
             ->with([
@@ -27,8 +27,8 @@ class DashboardController extends Controller
                     ->orderBy('bucket_start'),
             ]);
 
-        $this->applyFilters($query, $request);
-        $this->applySort($query, $sort);
+        $issueSearchQuery->apply($query, $search);
+        $issueSearchQuery->sort($query, $search);
 
         $issues = $query->paginate(20)->withQueryString();
 
@@ -44,17 +44,26 @@ class DashboardController extends Controller
 
         /** @var view-string $view */
         $view = 'error-tracker::dashboard.index';
+        $queryString = QueryStringBuilder::fromRequest($request, route('error-tracker.index'));
 
         return view($view, [
             'appName' => config('app.name'),
             'issues' => $issues,
+            'search' => $search,
             'filters' => [
-                'period' => $period,
-                'environment' => $request->string('environment')->toString(),
-                'levels' => $levels,
-                'statuses' => $statuses,
-                'search' => $search,
-                'sort' => $sort,
+                'period' => $search['period'],
+                'from' => $search['from'],
+                'to' => $search['to'],
+                'environment' => $search['environments'][0] ?? '',
+                'environments' => $search['environments'],
+                'levels' => $search['levels'],
+                'statuses' => $search['statuses'],
+                'q' => $queryText,
+                'search' => $queryText,
+                'resolved_by_type' => $search['resolved_by_type'],
+                'has_feedback' => $search['has_feedback'],
+                'sort' => $search['sort'],
+                'direction' => $search['direction'],
             ],
             'periodOptions' => [
                 '1h' => '1h',
@@ -76,20 +85,29 @@ class DashboardController extends Controller
                 'ignored' => 'Ignored',
                 'muted' => 'Muted',
             ],
-            'quickLevelOptions' => [
-                'all' => 'All',
-                'warning' => 'Warning',
-                'error' => 'Error',
-                'critical' => 'Critical',
+            'resolvedByTypeOptions' => [
+                'auto' => 'Auto',
+                'manual' => 'Manual',
+            ],
+            'hasFeedbackOptions' => [
+                '1' => 'Has feedback',
             ],
             'sortOptions' => [
-                'recent' => 'Recent',
-                'frequent' => 'Frequent',
-                'oldest' => 'Oldest',
+                'last_seen_at' => 'Last seen',
+                'first_seen_at' => 'First seen',
+                'total_events' => 'Total events',
+                'affected_users' => 'Affected users',
+                'level' => 'Level',
             ],
-            'statusCounts' => $this->statusCounts($request),
-            'levelCounts' => $this->levelCounts($request),
-            'queryString' => QueryStringBuilder::fromRequest($request, route('error-tracker.index')),
+            'directionOptions' => [
+                'desc' => 'Desc',
+                'asc' => 'Asc',
+            ],
+            'statusCounts' => $this->statusCounts($search, $issueSearchQuery),
+            'levelCounts' => $this->levelCounts($search, $issueSearchQuery),
+            'activeFilterChips' => $this->activeFilterChips($search, $queryText),
+            'clearFiltersUrl' => route('error-tracker.index'),
+            'queryString' => $queryString,
             'environmentOptions' => $environmentOptions,
             'environmentFallbackLabel' => $environmentOptions->count() === 1
                 ? ucfirst((string) $environmentOptions->first())
@@ -122,64 +140,11 @@ class DashboardController extends Controller
     }
 
     /**
-     * @param  Builder<Issue>  $query
-     */
-    protected function applyFilters(
-        Builder $query,
-        Request $request,
-        bool $includeStatus = true,
-        bool $includeLevel = true,
-    ): void {
-        if ($environment = $request->string('environment')->toString()) {
-            $query->where('environment', $environment);
-        }
-
-        $levels = $includeLevel ? $this->selectedLevels($request) : [];
-
-        if ($levels !== []) {
-            $query->whereIn('level', $levels);
-        }
-
-        $statuses = $includeStatus ? $this->selectedStatuses($request) : [];
-
-        if ($statuses !== []) {
-            $query->whereIn('status', $statuses);
-        }
-
-        if ($search = $this->selectedSearch($request)) {
-            $query->where(function ($subQuery) use ($search) {
-                $subQuery
-                    ->where('title', 'like', "%{$search}%")
-                    ->orWhere('exception_class', 'like', "%{$search}%")
-                    ->orWhere('message_sample', 'like', "%{$search}%");
-            });
-        }
-
-        [$from, $to] = $this->resolvePeriodRange($this->selectedPeriod($request));
-
-        if ($from && $to) {
-            $query->whereBetween('last_seen_at', [$from, $to]);
-        }
-    }
-
-    /**
-     * @param  Builder<Issue>  $query
-     */
-    protected function applySort(Builder $query, string $sort): void
-    {
-        match ($sort) {
-            'frequent' => $query->orderByDesc('total_events')->orderByDesc('last_seen_at'),
-            'oldest' => $query->orderBy('first_seen_at')->orderBy('id'),
-            default => $query->orderByDesc('last_seen_at')->orderByDesc('id'),
-        };
-    }
-
-    /**
      * @return array{all: int, open: int, resolved: int, ignored: int, muted: int}
      */
-    protected function statusCounts(Request $request): array
+    protected function statusCounts(array $search, IssueSearchQuery $issueSearchQuery): array
     {
-        $counts = $this->countsFor($request, 'status', ['open', 'resolved', 'ignored', 'muted'], includeStatus: false);
+        $counts = $this->countsFor($search, $issueSearchQuery, 'status', ['open', 'resolved', 'ignored', 'muted']);
 
         return [
             'all' => $counts['all'] ?? 0,
@@ -193,9 +158,9 @@ class DashboardController extends Controller
     /**
      * @return array{all: int, error: int, warning: int, critical: int, info: int, debug: int}
      */
-    protected function levelCounts(Request $request): array
+    protected function levelCounts(array $search, IssueSearchQuery $issueSearchQuery): array
     {
-        $counts = $this->countsFor($request, 'level', ['error', 'warning', 'critical', 'info', 'debug'], includeLevel: false);
+        $counts = $this->countsFor($search, $issueSearchQuery, 'level', ['error', 'warning', 'critical', 'info', 'debug']);
 
         return [
             'all' => $counts['all'] ?? 0,
@@ -212,15 +177,16 @@ class DashboardController extends Controller
      * @return array<string, int>
      */
     protected function countsFor(
-        Request $request,
+        array $search,
+        IssueSearchQuery $issueSearchQuery,
         string $column,
         array $keys,
-        bool $includeStatus = true,
-        bool $includeLevel = true,
     ): array {
         $query = Issue::query();
+        $searchForCounts = $search;
+        $searchForCounts[$column === 'status' ? 'statuses' : 'levels'] = [];
 
-        $this->applyFilters($query, $request, $includeStatus, $includeLevel);
+        $issueSearchQuery->apply($query, $searchForCounts);
 
         $counts = $query
             ->selectRaw($column.', count(*) as aggregate')
@@ -237,86 +203,62 @@ class DashboardController extends Controller
         return $result;
     }
 
-    protected function resolvePeriodRange(string $period): array
+    /**
+     * @param  array<string, mixed>  $search
+     * @return array<int, array{label: string, value: string}>
+     */
+    protected function activeFilterChips(array $search, string $queryText): array
     {
-        $to = now();
+        $chips = [];
 
-        return match ($period) {
-            '1h' => [$to->copy()->subHour(), $to],
-            '24h' => [$to->copy()->subDay(), $to],
-            '7d' => [$to->copy()->subDays(7), $to],
-            '30d' => [$to->copy()->subDays(30), $to],
-            'all' => [null, null],
-            default => [null, null],
-        };
-    }
-
-    protected function selectedPeriod(Request $request): string
-    {
-        $period = $request->string('period')->toString() ?: 'all';
-
-        return in_array($period, ['1h', '24h', '7d', '30d', 'all'], true)
-            ? $period
-            : 'all';
-    }
-
-    protected function selectedSort(Request $request): string
-    {
-        $sort = $request->string('sort')->toString() ?: 'recent';
-
-        return in_array($sort, ['recent', 'frequent', 'oldest'], true)
-            ? $sort
-            : 'recent';
-    }
-
-    protected function selectedSearch(Request $request): string
-    {
-        $search = trim($request->string('q')->toString());
-
-        if ($search !== '' || $request->query->has('q')) {
-            return $search;
+        if (trim($queryText) !== '') {
+            $chips[] = ['label' => 'Search', 'value' => $queryText];
         }
 
-        return trim($request->string('search')->toString());
-    }
-
-    protected function selectedStatuses(Request $request): array
-    {
-        $statuses = $request->input('status', []);
-
-        if (is_string($statuses) && $statuses !== '') {
-            $statuses = [$statuses];
+        foreach ($search['statuses'] as $status) {
+            $chips[] = ['label' => 'Status', 'value' => ucfirst($status)];
         }
 
-        if (! is_array($statuses)) {
-            $statuses = [];
+        foreach ($search['levels'] as $level) {
+            $chips[] = ['label' => 'Level', 'value' => ucfirst($level)];
         }
 
-        return collect($statuses)
-            ->filter()
-            ->map(fn ($status) => (string) $status)
-            ->intersect(['open', 'resolved', 'ignored', 'muted'])
-            ->values()
-            ->all();
-    }
-
-    protected function selectedLevels(Request $request): array
-    {
-        $levels = $request->input('level', []);
-
-        if (is_string($levels) && $levels !== '') {
-            $levels = [$levels];
+        foreach ($search['environments'] as $environment) {
+            $chips[] = ['label' => 'Environment', 'value' => ucfirst($environment)];
         }
 
-        if (! is_array($levels)) {
-            $levels = [];
+        foreach ([
+            'exception_class' => 'Exception',
+            'message' => 'Message',
+            'fingerprint' => 'Fingerprint',
+            'route' => 'Route',
+            'path' => 'Path',
+            'url' => 'URL',
+            'file' => 'File',
+            'user' => 'User',
+            'status_code' => 'Status code',
+            'resolved_by_type' => 'Resolved',
+        ] as $key => $label) {
+            if (($search[$key] ?? null) !== null && $search[$key] !== '') {
+                $chips[] = ['label' => $label, 'value' => (string) $search[$key]];
+            }
         }
 
-        return collect($levels)
-            ->filter()
-            ->map(fn ($level) => (string) $level)
-            ->intersect(['error', 'warning', 'info', 'debug', 'critical'])
-            ->values()
-            ->all();
+        if (($search['has_feedback'] ?? null) === true) {
+            $chips[] = ['label' => 'Feedback', 'value' => 'Has feedback'];
+        } elseif (($search['has_feedback'] ?? null) === false) {
+            $chips[] = ['label' => 'Feedback', 'value' => 'No feedback'];
+        }
+
+        if (($search['period'] ?? 'all') !== 'all') {
+            $chips[] = [
+                'label' => 'Period',
+                'value' => $search['period'] === 'custom'
+                    ? trim(($search['from'] ?? '').' - '.($search['to'] ?? ''))
+                    : (string) $search['period'],
+            ];
+        }
+
+        return $chips;
     }
 }

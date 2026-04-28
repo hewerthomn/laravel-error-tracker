@@ -703,8 +703,8 @@
           display: grid;
           grid-template-columns: minmax(320px, 1fr) auto;
           gap: 18px;
-          align-items: center;
-          margin-bottom: 18px;
+          align-items: start;
+          margin-bottom: 12px;
       }
 
       .issues-search-form {
@@ -735,6 +735,26 @@
       }
 
       .sort-segmented {
+          display: inline-flex;
+          align-items: center;
+          min-height: 50px;
+          border: 1px solid var(--border-strong);
+          border-radius: 16px;
+          background: #ffffff;
+          padding: 4px;
+          box-shadow: var(--shadow-sm);
+      }
+
+      .issues-sort-controls {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 8px;
+          min-width: 0;
+          flex-wrap: wrap;
+      }
+
+      .direction-segmented {
           display: inline-flex;
           align-items: center;
           min-height: 50px;
@@ -795,25 +815,109 @@
           align-items: center;
           justify-content: center;
           min-height: 40px;
-          min-width: 96px;
+          min-width: 86px;
           border-radius: 12px;
           color: #64748b;
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 800;
           padding: 0 14px;
           text-decoration: none;
           transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
       }
 
-      .sort-segment:hover {
+      .direction-segment {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 40px;
+          min-width: 52px;
+          border-radius: 12px;
+          color: #64748b;
+          font-size: 13px;
+          font-weight: 800;
+          padding: 0 12px;
+          text-decoration: none;
+          transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .sort-segment:hover,
+      .direction-segment:hover {
           color: var(--text);
           text-decoration: none;
       }
 
-      .sort-segment.is-active {
+      .sort-segment.is-active,
+      .direction-segment.is-active {
           background: #eff6ff;
           color: #1d4ed8;
           box-shadow: var(--shadow-sm);
+      }
+
+      .active-filter-bar {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 14px;
+          margin-bottom: 16px;
+          min-width: 0;
+      }
+
+      .active-filter-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          min-width: 0;
+      }
+
+      .active-filter-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          min-height: 30px;
+          border: 1px solid #bfdbfe;
+          border-radius: 999px;
+          background: #eff6ff;
+          color: #1e3a8a;
+          font-size: 12px;
+          font-weight: 800;
+          line-height: 1;
+          padding: 7px 10px;
+          max-width: 100%;
+      }
+
+      .active-filter-chip span {
+          color: #2563eb;
+          text-transform: uppercase;
+          font-size: 10px;
+          letter-spacing: 0.08em;
+      }
+
+      .active-filter-chip strong {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+      }
+
+      .clear-filters-link {
+          flex: 0 0 auto;
+          display: inline-flex;
+          align-items: center;
+          min-height: 30px;
+          border: 1px solid var(--border-strong);
+          border-radius: 999px;
+          background: #ffffff;
+          color: #475569;
+          font-size: 12px;
+          font-weight: 900;
+          padding: 7px 10px;
+          text-decoration: none;
+      }
+
+      .clear-filters-link:hover {
+          color: #1d4ed8;
+          border-color: #bfdbfe;
+          background: #eff6ff;
+          text-decoration: none;
       }
 
       .period-segmented {
@@ -1305,7 +1409,9 @@
               grid-template-columns: 1fr;
           }
 
-          .sort-segmented {
+          .issues-sort-controls,
+          .sort-segmented,
+          .direction-segmented {
               justify-self: start;
               width: 100%;
           }
@@ -1315,6 +1421,10 @@
           }
 
           .sort-segment {
+              flex: 1 1 0;
+          }
+
+          .direction-segment {
               flex: 1 1 0;
           }
 

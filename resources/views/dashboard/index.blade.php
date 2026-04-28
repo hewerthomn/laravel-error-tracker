@@ -17,6 +17,21 @@
         <main class="issues-main">
             @include('error-tracker::dashboard.partials.topbar')
 
+            @if (! empty($activeFilterChips))
+                <div class="active-filter-bar" aria-label="Active filters">
+                    <div class="active-filter-chips">
+                        @foreach ($activeFilterChips as $chip)
+                            <span class="active-filter-chip">
+                                <span>{{ $chip['label'] }}</span>
+                                <strong>{{ $chip['value'] }}</strong>
+                            </span>
+                        @endforeach
+                    </div>
+
+                    <a href="{{ $clearFiltersUrl }}" class="clear-filters-link">Clear filters</a>
+                </div>
+            @endif
+
             <div class="issue-card-list" aria-label="Issues">
                 @forelse ($issues as $issue)
                     @include('error-tracker::dashboard.partials.issue-card', ['issue' => $issue])

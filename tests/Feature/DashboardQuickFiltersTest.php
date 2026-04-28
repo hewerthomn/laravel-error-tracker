@@ -162,13 +162,69 @@ it('renders the issue sidebar search input and sort segmented control', function
         ->assertSee('Error Tracker')
         ->assertSee('href="'.route('error-tracker.index').'"', false)
         ->assertSee('Status')
-        ->assertSee('Search errors, paths, or messages...')
-        ->assertSee('Recent')
-        ->assertSee('Frequent')
-        ->assertSee('Oldest')
+        ->assertSee('Search or use operators')
+        ->assertSee('Resolved by')
+        ->assertSee('Feedback')
+        ->assertSee('Last seen')
+        ->assertSee('First seen')
+        ->assertSee('Total events')
         ->assertSee('aria-label="Filter issue period"', false)
         ->assertDontSee('<h2 class="filter-sidebar-heading">Period</h2>', false)
         ->assertSee('Rendered dashboard issue');
+});
+
+it('renders active filter chips and a clean clear filters link', function () {
+    createDashboardIssue([
+        'title' => 'Filtered dashboard issue',
+        'status' => 'open',
+        'level' => 'error',
+        'environment' => 'production',
+    ]);
+
+    createDashboardIssue([
+        'title' => 'Hidden dashboard issue',
+        'status' => 'resolved',
+        'level' => 'warning',
+        'environment' => 'staging',
+    ]);
+
+    /** @var TestCase $this */
+    $this->get(route('error-tracker.index', [
+        'period' => 'all',
+        'q' => 'dashboard status:open',
+        'level' => 'error',
+        'environment' => 'production',
+        'resolved_by_type' => 'auto',
+        'has_feedback' => '1',
+    ]))
+        ->assertOk()
+        ->assertSee('active-filter-chip', false)
+        ->assertSee('Search')
+        ->assertSee('dashboard status:open')
+        ->assertSee('Status')
+        ->assertSee('Open')
+        ->assertSee('Level')
+        ->assertSee('Error')
+        ->assertSee('Environment')
+        ->assertSee('Production')
+        ->assertSee('Feedback')
+        ->assertSee('Has feedback')
+        ->assertSee('href="'.route('error-tracker.index').'"', false)
+        ->assertDontSee('Hidden dashboard issue');
+});
+
+it('uses get query parameters for dashboard filters', function () {
+    createDashboardIssue(['title' => 'URL dashboard issue', 'environment' => 'testing']);
+    createDashboardIssue(['title' => 'Production dashboard issue', 'environment' => 'production']);
+
+    /** @var TestCase $this */
+    $this->get(route('error-tracker.index', ['period' => 'all']))
+        ->assertOk()
+        ->assertSee('method="GET"', false)
+        ->assertSee('name="q"', false)
+        ->assertSee('status=resolved', false)
+        ->assertSee('level=warning', false)
+        ->assertSee('environment=production', false);
 });
 
 function createDashboardIssue(array $attributes = []): Issue

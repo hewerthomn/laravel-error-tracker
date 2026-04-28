@@ -3,6 +3,8 @@
     $selectedLevels = $filters['levels'] ?? [];
     $activePeriod = $filters['period'] ?? 'all';
     $activeEnvironment = $filters['environment'] ?? '';
+    $activeResolvedByType = $filters['resolved_by_type'] ?? '';
+    $activeHasFeedback = ($filters['has_feedback'] ?? null) === true;
     $statusFilterOptions = ['all' => 'All'] + $statusOptions;
     $levelFilterOptions = ['all' => 'All'] + $levelOptions;
     $environmentLinkLimit = 8;
@@ -87,8 +89,20 @@
                         <input type="hidden" name="period" value="{{ $activePeriod }}">
                     @endif
 
-                    @if (($filters['search'] ?? '') !== '')
-                        <input type="hidden" name="search" value="{{ $filters['search'] }}">
+                    @if (($filters['q'] ?? '') !== '')
+                        <input type="hidden" name="q" value="{{ $filters['q'] }}">
+                    @endif
+
+                    @if (($filters['direction'] ?? 'desc') !== 'desc')
+                        <input type="hidden" name="direction" value="{{ $filters['direction'] }}">
+                    @endif
+
+                    @if (($filters['resolved_by_type'] ?? '') !== '')
+                        <input type="hidden" name="resolved_by_type" value="{{ $filters['resolved_by_type'] }}">
+                    @endif
+
+                    @if (($filters['has_feedback'] ?? null) === true)
+                        <input type="hidden" name="has_feedback" value="1">
                     @endif
 
                     @foreach ($selectedStatuses as $selectedStatus)
@@ -112,5 +126,55 @@
         @else
             <div class="filter-sidebar-muted-row">{{ $environmentFallbackLabel }}</div>
         @endif
+    </section>
+
+    <section class="filter-sidebar-section">
+        <h2 class="filter-sidebar-heading">Resolved by</h2>
+
+        <div class="filter-sidebar-options">
+            <a
+                href="{{ $queryString->url(['resolved_by_type' => null, 'resolved' => null]) }}"
+                class="filter-sidebar-link {{ $activeResolvedByType === '' ? 'is-active' : '' }}"
+                @if ($activeResolvedByType === '') aria-current="true" @endif
+            >
+                <span>All</span>
+            </a>
+
+            @foreach ($resolvedByTypeOptions as $value => $label)
+                @php
+                    $isActive = $activeResolvedByType === $value;
+                @endphp
+
+                <a
+                    href="{{ $queryString->url(['resolved_by_type' => $value, 'resolved' => null]) }}"
+                    class="filter-sidebar-link {{ $isActive ? 'is-active' : '' }}"
+                    @if ($isActive) aria-current="true" @endif
+                >
+                    <span>{{ $label }}</span>
+                </a>
+            @endforeach
+        </div>
+    </section>
+
+    <section class="filter-sidebar-section">
+        <h2 class="filter-sidebar-heading">Feedback</h2>
+
+        <div class="filter-sidebar-options">
+            <a
+                href="{{ $queryString->url(['has_feedback' => null, 'has' => null]) }}"
+                class="filter-sidebar-link {{ ! $activeHasFeedback ? 'is-active' : '' }}"
+                @if (! $activeHasFeedback) aria-current="true" @endif
+            >
+                <span>All</span>
+            </a>
+
+            <a
+                href="{{ $queryString->url(['has_feedback' => '1', 'has' => null]) }}"
+                class="filter-sidebar-link {{ $activeHasFeedback ? 'is-active' : '' }}"
+                @if ($activeHasFeedback) aria-current="true" @endif
+            >
+                <span>Has feedback</span>
+            </a>
+        </div>
     </section>
 </div>
