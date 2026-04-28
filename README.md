@@ -257,6 +257,8 @@ By default, project frames are detected from common Laravel paths and namespaces
         base_path('bootstrap/cache'),
     ],
     'collapse_non_project_frames' => true,
+    'show_source_context' => true,
+    'source_context_lines' => 5,
     'path_display' => env('ERROR_TRACKER_STACKTRACE_PATH_DISPLAY', 'relative'),
     'store_absolute_paths' => env('ERROR_TRACKER_STACKTRACE_STORE_ABSOLUTE_PATHS', false),
     'source_context' => [
@@ -271,6 +273,7 @@ By default, project frames are detected from common Laravel paths and namespaces
             app_path(),
             base_path('routes'),
             base_path('database'),
+            base_path('config'),
             base_path('packages'),
             base_path('modules'),
         ],
@@ -284,7 +287,7 @@ By default, project frames are detected from common Laravel paths and namespaces
 ],
 ```
 
-Function arguments are not stored or displayed by default for security. Keep `stacktrace.store_arguments` disabled unless you have reviewed the privacy impact for request payloads, tokens, cookies, and other sensitive values.
+Function arguments are not stored or displayed by default for security. Old traces that contain `args` or `arguments` are ignored by the presenter. Source context is only read from configured `stacktrace.project_paths`, never from `vendor` by default, and source lines containing tokens, passwords, secrets, authorization values, cookies, or `x-api-key` are masked before display.
 
 ## Path normalization and source context
 
@@ -294,7 +297,7 @@ Error Tracker normalizes stack trace paths by default before storing or displayi
 
 Source context is enabled by default and stores a small snippet around eligible project stack frames. When an exception is thrown inside Laravel or another dependency, Error Tracker marks the first project frame closest to the top of the stack as the application frame and uses that frame for the event location and primary source context. The original throwing frame is still kept in the stack trace and labeled separately when it comes from the framework.
 
-Source context is limited to configured project paths, skips excluded paths such as `vendor`, `storage`, and `bootstrap/cache`, enforces a maximum file size, and does not read `.env`. The dashboard escapes source lines when rendering them.
+Source context is limited to configured project paths, skips excluded paths such as `vendor`, `storage`, and `bootstrap/cache`, enforces a maximum file size, and does not read `.env`. Missing or unreadable files simply return no context, so the dashboard keeps rendering. The dashboard escapes source lines when rendering them.
 
 Available source context settings:
 
@@ -311,6 +314,7 @@ Available source context settings:
         app_path(),
         base_path('routes'),
         base_path('database'),
+        base_path('config'),
         base_path('packages'),
         base_path('modules'),
     ],

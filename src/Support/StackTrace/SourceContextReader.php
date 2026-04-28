@@ -4,6 +4,18 @@ namespace Hewerthomn\ErrorTracker\Support\StackTrace;
 
 class SourceContextReader
 {
+    /**
+     * @var array<int, string>
+     */
+    protected array $sensitiveFragments = [
+        'token',
+        'password',
+        'secret',
+        'authorization',
+        'cookie',
+        'x-api-key',
+    ];
+
     public function __construct(
         protected PathNormalizer $pathNormalizer,
     ) {}
@@ -59,7 +71,7 @@ class SourceContextReader
         for ($number = $start; $number <= $end; $number++) {
             $contextLines[] = [
                 'number' => $number,
-                'code' => $lines[$number - 1] ?? '',
+                'code' => $this->maskSensitiveSourceLine($lines[$number - 1] ?? ''),
                 'is_error_line' => $number === $targetLine,
             ];
         }
@@ -103,11 +115,19 @@ class SourceContextReader
             return true;
         }
 
-        if (! $this->pathNormalizer->isInsideAllowedPaths($realFile, $this->configuredPaths('paths'))) {
+        $projectPaths = $this->projectPaths();
+
+        if (! $this->pathNormalizer->isInsideAllowedPaths($realFile, $projectPaths)) {
             return true;
         }
 
-        if ($this->pathNormalizer->isInsideAllowedPaths($realFile, $this->configuredPaths('excluded_paths'))) {
+        $sourceContextPaths = $this->configuredPaths('paths');
+
+        if ($sourceContextPaths !== [] && ! $this->pathNormalizer->isInsideAllowedPaths($realFile, $sourceContextPaths)) {
+            return true;
+        }
+
+        if ($this->pathNormalizer->isInsideAllowedPaths($realFile, $this->excludedPaths())) {
             return true;
         }
 
@@ -116,6 +136,41 @@ class SourceContextReader
         }
 
         return false;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function projectPaths(): array
+    {
+        $paths = config('error-tracker.stacktrace.project_paths', []);
+
+        if (! is_array($paths)) {
+            return [];
+        }
+
+        return collect($paths)
+            ->filter(fn ($path) => is_string($path) && trim($path) !== '')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function excludedPaths(): array
+    {
+        $nonProjectPaths = config('error-tracker.stacktrace.non_project_paths', []);
+
+        if (! is_array($nonProjectPaths)) {
+            $nonProjectPaths = [];
+        }
+
+        return collect($this->configuredPaths('excluded_paths'))
+            ->merge($nonProjectPaths)
+            ->filter(fn ($path) => is_string($path) && trim($path) !== '')
+            ->values()
+            ->all();
     }
 
     /**
@@ -147,5 +202,18 @@ class SourceContextReader
     protected function legacyContextLines(): int
     {
         return max(0, (int) config('error-tracker.stacktrace.source_context_lines', 5));
+    }
+
+    protected function maskSensitiveSourceLine(string $line): string
+    {
+        $normalized = strtolower($line);
+
+        foreach ($this->sensitiveFragments as $fragment) {
+            if (str_contains($normalized, $fragment)) {
+                return '[REDACTED SENSITIVE SOURCE LINE]';
+            }
+        }
+
+        return $line;
     }
 }

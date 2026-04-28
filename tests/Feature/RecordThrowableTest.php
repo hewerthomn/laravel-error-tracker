@@ -4,6 +4,9 @@ use Hewerthomn\ErrorTracker\Actions\RecordThrowableAction;
 use Hewerthomn\ErrorTracker\Models\Event;
 use Hewerthomn\ErrorTracker\Models\Issue;
 use Hewerthomn\ErrorTracker\Support\StackTracePresenter;
+use Hewerthomn\ErrorTracker\Tests\TestCase;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 it('records and groups repeated exceptions into the same issue', function () {
     $action = app(RecordThrowableAction::class);
@@ -140,6 +143,79 @@ it('renders normalized paths and source context on the event detail view', funct
             ->and($html)->toContain('throw new RuntimeException')
             ->and($html)->toContain('is-highlighted');
     });
+});
+
+it('renders grouped smart stack trace on the event detail route', function () {
+    Gate::define('viewErrorTracker', fn ($user = null): bool => true);
+
+    config([
+        'error-tracker.stacktrace.smart_grouping' => true,
+        'error-tracker.stacktrace.collapse_non_project_frames' => true,
+    ]);
+
+    $issue = Issue::query()->create([
+        'fingerprint' => 'grouped-stack-trace',
+        'title' => 'RuntimeException: grouped stack trace',
+        'level' => 'error',
+        'status' => 'open',
+        'environment' => 'testing',
+        'exception_class' => RuntimeException::class,
+        'message_sample' => 'Grouped stack trace',
+        'first_seen_at' => now(),
+        'last_seen_at' => now(),
+        'total_events' => 1,
+        'affected_users' => 0,
+    ]);
+
+    $event = $issue->events()->create([
+        'uuid' => (string) Str::uuid(),
+        'occurred_at' => now(),
+        'level' => 'error',
+        'exception_class' => RuntimeException::class,
+        'message' => 'Grouped stack trace',
+        'file' => 'app/Jobs/SendReport.php',
+        'line' => 12,
+        'environment' => 'testing',
+        'feedback_token' => (string) Str::uuid(),
+        'trace_json' => [
+            [
+                'file' => 'app/Jobs/SendReport.php',
+                'line' => 12,
+                'class' => 'App\\Jobs\\SendReport',
+                'function' => 'handle',
+                'is_culprit' => true,
+            ],
+            [
+                'file' => 'vendor/acme/package/src/Client.php',
+                'line' => 44,
+                'class' => 'Acme\\Package\\Client',
+                'function' => 'send',
+            ],
+            [
+                'file' => 'vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php',
+                'line' => 120,
+                'class' => 'Illuminate\\Pipeline\\Pipeline',
+                'function' => 'then',
+            ],
+            [
+                'file' => 'routes/web.php',
+                'line' => 20,
+                'function' => '{closure}',
+            ],
+        ],
+    ]);
+
+    /** @var TestCase $this */
+    $this->get(route('error-tracker.events.show', $event))
+        ->assertOk()
+        ->assertSee('RuntimeException')
+        ->assertSee('Most recent call first')
+        ->assertSee('First project frame')
+        ->assertSee('2 non-project frames')
+        ->assertSee('stacktrace-group', false)
+        ->assertSee('x-data', false)
+        ->assertSee('App\\Jobs\\SendReport')
+        ->assertSee('routes/web.php');
 });
 
 function recordUserNotFound(RecordThrowableAction $action, int $id)

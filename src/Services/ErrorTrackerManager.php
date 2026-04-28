@@ -307,10 +307,7 @@ class ErrorTrackerManager implements ExceptionRecorder
             $sourceContext = null;
             $shouldReadSourceContext = $file !== null
                 && $sourceContextFrames < $maxSourceContextFrames
-                && (
-                    $classification === 'project'
-                    || ($isCulprit && $projectCulpritIndex === null && $fallbackToThrowingFrame)
-                );
+                && $classification === 'project';
 
             if ($shouldReadSourceContext) {
                 $sourceContext = $this->sourceContextReader->read($file, $frame['line'] ?? null);

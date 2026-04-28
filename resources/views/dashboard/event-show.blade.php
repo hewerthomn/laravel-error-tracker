@@ -323,7 +323,7 @@
 
                         @if ($culpritFrame)
                             <div class="first-project-frame">
-                                Application frame:
+                                First project frame:
                                 <span class="mono-inline">
                                     {{ $culpritFrame['relative_file'] ?? $culpritFrame['file'] ?? 'unknown file' }}@if($culpritFrame['line']):{{ $culpritFrame['line'] }}@endif
                                 </span>

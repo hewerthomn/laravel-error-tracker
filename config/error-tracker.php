@@ -177,6 +177,7 @@ return [
                 app_path(),
                 base_path('routes'),
                 base_path('database'),
+                base_path('config'),
                 base_path('packages'),
                 base_path('modules'),
             ],

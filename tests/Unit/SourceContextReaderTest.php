@@ -12,6 +12,7 @@ beforeEach(function () {
         'error-tracker.stacktrace.source_context.max_file_size_kb' => 512,
         'error-tracker.stacktrace.source_context.project_only' => true,
         'error-tracker.stacktrace.source_context.excluded_paths' => [],
+        'error-tracker.stacktrace.non_project_paths' => [],
     ]);
 });
 
@@ -26,7 +27,10 @@ it('reads lines around the error line', function () {
         'line 6',
     ]);
 
-    config(['error-tracker.stacktrace.source_context.paths' => [$root.'/app']]);
+    config([
+        'error-tracker.stacktrace.project_paths' => [$root.'/app'],
+        'error-tracker.stacktrace.source_context.paths' => [$root.'/app'],
+    ]);
 
     $context = sourceContextReader()->read($file, 4);
 
@@ -44,7 +48,10 @@ it('reads lines around the error line', function () {
 });
 
 it('returns null when the file does not exist', function () {
-    config(['error-tracker.stacktrace.source_context.paths' => [sourceContextRoot('missing').'/app']]);
+    config([
+        'error-tracker.stacktrace.project_paths' => [sourceContextRoot('missing').'/app'],
+        'error-tracker.stacktrace.source_context.paths' => [sourceContextRoot('missing').'/app'],
+    ]);
 
     expect(sourceContextReader()->read(sourceContextRoot('missing').'/app/Missing.php', 1))->toBeNull();
 });
@@ -53,7 +60,10 @@ it('does not read files outside allowed paths', function () {
     $root = sourceContextRoot('outside');
     $file = makeSourceContextFile($root.'/outside/Secret.php', ['<?php', '$secret = true;']);
 
-    config(['error-tracker.stacktrace.source_context.paths' => [$root.'/app']]);
+    config([
+        'error-tracker.stacktrace.project_paths' => [$root.'/app'],
+        'error-tracker.stacktrace.source_context.paths' => [$root.'/app'],
+    ]);
 
     expect(sourceContextReader()->read($file, 2))->toBeNull();
 });
@@ -62,7 +72,10 @@ it('blocks path traversal', function () {
     $root = sourceContextRoot('traversal');
 
     makeSourceContextFile($root.'/secret.php', ['<?php', '$secret = true;']);
-    config(['error-tracker.stacktrace.source_context.paths' => [$root.'/app']]);
+    config([
+        'error-tracker.stacktrace.project_paths' => [$root.'/app'],
+        'error-tracker.stacktrace.source_context.paths' => [$root.'/app'],
+    ]);
 
     withTemporaryBasePath($root.'/app', function () {
         expect(sourceContextReader()->read('../secret.php', 2))->toBeNull();
@@ -75,6 +88,7 @@ it('respects max file size', function () {
 
     config([
         'error-tracker.stacktrace.source_context.paths' => [$root.'/app'],
+        'error-tracker.stacktrace.project_paths' => [$root.'/app'],
         'error-tracker.stacktrace.source_context.max_file_size_kb' => 1,
     ]);
 
@@ -87,6 +101,7 @@ it('respects excluded paths', function () {
 
     config([
         'error-tracker.stacktrace.source_context.paths' => [$root.'/app'],
+        'error-tracker.stacktrace.project_paths' => [$root.'/app'],
         'error-tracker.stacktrace.source_context.excluded_paths' => [$root.'/app/Secrets'],
     ]);
 
@@ -99,12 +114,33 @@ it('does not read vendor when project only is enabled', function () {
 
     config([
         'error-tracker.stacktrace.source_context.paths' => [$root.'/vendor'],
+        'error-tracker.stacktrace.project_paths' => [$root.'/vendor'],
         'error-tracker.stacktrace.source_context.project_only' => true,
     ]);
 
     withTemporaryBasePath($root, function () use ($file) {
         expect(sourceContextReader()->read($file, 2))->toBeNull();
     });
+});
+
+it('masks sensitive source lines', function () {
+    $root = sourceContextRoot('sensitive-lines');
+    $file = makeSourceContextFile($root.'/app/Services/Credentials.php', [
+        '<?php',
+        '$password = "plain-text-secret";',
+        'throw new RuntimeException();',
+    ]);
+
+    config([
+        'error-tracker.stacktrace.project_paths' => [$root.'/app'],
+        'error-tracker.stacktrace.source_context.paths' => [$root.'/app'],
+    ]);
+
+    $context = sourceContextReader()->read($file, 2);
+
+    expect($context)->not->toBeNull()
+        ->and(json_encode($context))->not->toContain('plain-text-secret')
+        ->and($context['lines'][1]['code'])->toBe('[REDACTED SENSITIVE SOURCE LINE]');
 });
 
 function sourceContextReader(): SourceContextReader
