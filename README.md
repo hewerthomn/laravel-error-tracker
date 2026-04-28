@@ -14,7 +14,7 @@ and optional end-user feedback.
 
 Full documentation is available at:
 
-https://hewerthomn.github.io/laravel-error-tracker/
+https://hewerthomn.com/laravel-error-tracker/
 
 The README contains the quick start. The documentation site contains the full guide.
 

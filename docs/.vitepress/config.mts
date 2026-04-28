@@ -1,11 +1,13 @@
 import { defineConfig } from 'vitepress';
 
 export default defineConfig({
+  lang: 'en-US',
   title: 'Laravel Error Tracker',
   description: 'Laravel-first self-hosted error tracking package',
   base: '/laravel-error-tracker/',
   cleanUrls: true,
   themeConfig: {
+    siteTitle: 'Laravel Error Tracker',
     nav: [
       { text: 'Guide', link: '/installation' },
       { text: 'GitHub', link: 'https://github.com/hewerthomn/laravel-error-tracker' },
@@ -37,6 +39,7 @@ export default defineConfig({
         items: [
           { text: 'Diagnostics', link: '/diagnostics' },
           { text: 'Demo Data', link: '/demo-data' },
+          { text: 'Commands', link: '/commands' },
           { text: 'Security', link: '/security' },
         ],
       },
@@ -47,5 +50,9 @@ export default defineConfig({
     socialLinks: [
       { icon: 'github', link: 'https://github.com/hewerthomn/laravel-error-tracker' },
     ],
+    editLink: {
+      pattern: 'https://github.com/hewerthomn/laravel-error-tracker/edit/main/docs/:path',
+      text: 'Edit this page on GitHub',
+    },
   },
 });
