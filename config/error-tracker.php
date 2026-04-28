@@ -136,7 +136,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'stacktrace' => [
-        'smart_grouping' => true,
+        'smart_grouping' => env('ERROR_TRACKER_SMART_STACKTRACE_ENABLED', true),
         'path_display' => env('ERROR_TRACKER_STACKTRACE_PATH_DISPLAY', 'relative'),
         'store_absolute_paths' => env('ERROR_TRACKER_STACKTRACE_STORE_ABSOLUTE_PATHS', false),
 
@@ -217,8 +217,8 @@ return [
     |--------------------------------------------------------------------------
     */
     'notifications' => [
-        'enabled' => true,
-        'channels' => ['mail'],
+        'enabled' => env('ERROR_TRACKER_NOTIFICATIONS_ENABLED', true),
+        'channels' => array_values(array_filter(array_map('trim', explode(',', env('ERROR_TRACKER_NOTIFICATION_CHANNELS', 'mail'))))),
         'notify_on_new_issue' => true,
         'notify_on_regression' => false,
         'notify_on_reactivated' => true,
@@ -249,7 +249,7 @@ return [
     */
     'feedback' => [
         'enabled' => env('ERROR_TRACKER_FEEDBACK_ENABLED', false),
-        'allow_guest' => true,
+        'allow_guest' => env('ERROR_TRACKER_FEEDBACK_ALLOW_GUEST', true),
         'only_production' => false,
         'rate_limit' => '5,1',
         'collect_name' => true,

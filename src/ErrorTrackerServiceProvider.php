@@ -4,7 +4,9 @@ namespace Hewerthomn\ErrorTracker;
 
 use Hewerthomn\ErrorTracker\Actions\RecordThrowableAction;
 use Hewerthomn\ErrorTracker\Commands\AutoResolveCommand;
+use Hewerthomn\ErrorTracker\Commands\DemoCommand;
 use Hewerthomn\ErrorTracker\Commands\DoctorCommand;
+use Hewerthomn\ErrorTracker\Commands\InstallCommand;
 use Hewerthomn\ErrorTracker\Commands\PruneCommand;
 use Hewerthomn\ErrorTracker\Contracts\ExceptionRecorder;
 use Hewerthomn\ErrorTracker\Services\ErrorTrackerManager;
@@ -38,25 +40,10 @@ class ErrorTrackerServiceProvider extends PackageServiceProvider
             ->hasMigration('add_user_id_to_error_tracker_feedback_table')
             ->hasMigration('add_resolution_metadata_to_error_tracker_issues_table')
             ->hasCommand(AutoResolveCommand::class)
+            ->hasCommand(DemoCommand::class)
             ->hasCommand(DoctorCommand::class)
-            ->hasCommand(PruneCommand::class)
-            ->hasInstallCommand(function ($command) {
-                $command
-                    ->publishConfigFile()
-                    ->publishMigrations()
-                    ->askToRunMigrations()
-                    ->endWith(function ($command): void {
-                        $command->newLine();
-                        $command->comment('Next recommended commands:');
-                        $command->line('php artisan migrate');
-                        $command->line('php artisan error-tracker:doctor');
-                        $command->newLine();
-                        $command->comment('After composer update, publish new migrations and run diagnostics:');
-                        $command->line('php artisan vendor:publish --tag=error-tracker-migrations');
-                        $command->line('php artisan migrate');
-                        $command->line('php artisan error-tracker:doctor');
-                    });
-            });
+            ->hasCommand(InstallCommand::class)
+            ->hasCommand(PruneCommand::class);
     }
 
     public function packageRegistered(): void

@@ -49,6 +49,38 @@ php artisan migrate
 php artisan error-tracker:doctor
 ```
 
+The default installer is non-destructive: it publishes the package config and migrations, optionally asks to run migrations in interactive terminals, and prints the next recommended commands.
+
+For a guided setup, use:
+
+```bash
+php artisan error-tracker:install --guided
+```
+
+The guided installer can suggest the main `.env` values for feedback, custom error pages, auto resolve, notifications, notification cooldown, smart stack trace, and database connection. It does not edit `config/error-tracker.php` directly. To write missing `.env` values idempotently, pass `--write-env`.
+
+Preset shortcuts are available:
+
+```bash
+php artisan error-tracker:install --preset=local
+php artisan error-tracker:install --preset=production
+php artisan error-tracker:install --preset=minimal
+php artisan error-tracker:install --preset=demo
+```
+
+Presets:
+
+* `minimal`: feedback off, notifications off, auto resolve off, custom error page off, smart stack trace on
+* `local`: feedback on, notifications off, auto resolve off, custom error page on, smart stack trace on
+* `production`: feedback on, notifications on, auto resolve off, custom error page on, smart stack trace on, notification cooldown on
+* `demo`: feedback on, notifications off, auto resolve on, custom error page on, smart stack trace on, and demo data generation enabled
+
+To generate demo data at the end of installation:
+
+```bash
+php artisan error-tracker:install --with-demo
+```
+
 ## Updating the package
 
 New Error Tracker features can add database migrations. After updating the package, publish any new migrations, run them, clear optimized config, and run diagnostics:
@@ -196,6 +228,31 @@ Error Tracker - {APP_NAME}
 ```
 
 The dashboard also supports a configurable shortcut back to the host application.
+
+## Screenshots
+
+Screenshot placeholders live in:
+
+```text
+docs/screenshots/*.png
+```
+
+Generate screenshot-friendly demo data before capturing README images:
+
+```bash
+php artisan migrate
+php artisan error-tracker:demo --fresh --with-feedback --with-notifications --with-resolved
+```
+
+The demo command creates only records whose issue fingerprint starts with `demo:` and marks event context with `_demo: true`, so screenshots can be created without exposing real production data.
+
+Recommended screenshots:
+
+* `docs/screenshots/dashboard.png`: dashboard with mixed statuses, levels, environments, and trends
+* `docs/screenshots/issue-detail.png`: issue detail with trends and notification history
+* `docs/screenshots/event-detail.png`: smart stack trace with project frames and grouped vendor/framework frames
+* `docs/screenshots/feedback.png`: event detail showing user feedback
+* `docs/screenshots/diagnostics.png`: diagnostics page
 
 ### Dashboard quick filters
 
@@ -491,6 +548,30 @@ Install:
 php artisan error-tracker:install
 ```
 
+Guided install:
+
+```bash
+php artisan error-tracker:install --guided
+```
+
+Install with a preset:
+
+```bash
+php artisan error-tracker:install --preset=production
+```
+
+Generate demo data:
+
+```bash
+php artisan error-tracker:demo --fresh --with-feedback --with-notifications --with-resolved
+```
+
+Purge demo data only:
+
+```bash
+php artisan error-tracker:demo --purge
+```
+
 Prune old data:
 
 ```bash
@@ -507,6 +588,12 @@ Run upgrade and configuration diagnostics:
 
 ```bash
 php artisan error-tracker:doctor
+```
+
+JSON diagnostics for CI:
+
+```bash
+php artisan error-tracker:doctor --json --fail-on-missing
 ```
 
 Dry run:

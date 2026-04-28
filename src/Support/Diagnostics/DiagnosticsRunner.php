@@ -28,12 +28,16 @@ class DiagnosticsRunner
             $this->columnCheck('error_tracker_issues', 'resolved_reason', 'Auto Resolve metadata'),
             $this->commandCheck('error-tracker:prune'),
             $this->commandCheck('error-tracker:auto-resolve'),
+            $this->commandCheck('error-tracker:demo'),
             $this->commandCheck('error-tracker:doctor'),
             $this->configCacheCheck(),
             $this->configBooleanCheck('auto_resolve', (bool) config('error-tracker.auto_resolve.enabled', false)),
             $this->configBooleanCheck('notifications', (bool) config('error-tracker.notifications.enabled', true)),
             $this->notificationCooldownCheck(),
             $this->configBooleanCheck('feedback', (bool) config('error-tracker.feedback.enabled', false)),
+            $this->configBooleanCheck('error_page', (bool) config('error-tracker.error_page.enabled', true)),
+            $this->configBooleanCheck('smart_stacktrace', (bool) config('error-tracker.stacktrace.smart_grouping', true)),
+            $this->schedulerHintCheck(),
         ];
     }
 
@@ -166,6 +170,20 @@ class DiagnosticsRunner
             description: 'Cooldown: '.$minutes.' minute(s). Max per issue per hour: '.$maxPerHour.'.',
             required: false,
             feature: 'Notification Cooldown',
+        );
+    }
+
+    protected function schedulerHintCheck(): DiagnosticCheck
+    {
+        return new DiagnosticCheck(
+            key: 'scheduler.auto_resolve',
+            label: 'auto resolve scheduler',
+            status: 'info',
+            target: 'routes/console.php',
+            description: 'If Auto Resolve is enabled, schedule error-tracker:auto-resolve to run daily.',
+            fixCommand: 'Schedule::command(\'error-tracker:auto-resolve\')->daily();',
+            required: false,
+            feature: 'Scheduler',
         );
     }
 
