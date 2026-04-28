@@ -32,6 +32,7 @@ class ErrorTrackerServiceProvider extends PackageServiceProvider
             ->hasMigration('create_error_tracker_issues_table')
             ->hasMigration('create_error_tracker_events_table')
             ->hasMigration('create_error_tracker_issue_trends_table')
+            ->hasMigration('create_error_tracker_issue_notifications_table')
             ->hasMigration('create_error_tracker_feedback_table')
             ->hasMigration('add_user_id_to_error_tracker_feedback_table')
             ->hasMigration('add_resolution_metadata_to_error_tracker_issues_table')

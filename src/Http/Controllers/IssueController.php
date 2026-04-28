@@ -19,6 +19,7 @@ class IssueController extends Controller
         $issue->load([
             'lastEvent',
             'events' => fn ($query) => $query->latest('occurred_at')->limit(25),
+            'notifications' => fn ($query) => $query->latest('sent_at')->limit(5),
             'trends' => fn ($query) => $query
                 ->where('bucket_granularity', 'hour')
                 ->orderBy('bucket_start'),

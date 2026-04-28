@@ -12,5 +12,6 @@ class RecordedEventResult
         public Event $event,
         public bool $issueWasCreated = false,
         public bool $issueWasReactivated = false,
+        public bool $issueWasRegression = false,
     ) {}
 }

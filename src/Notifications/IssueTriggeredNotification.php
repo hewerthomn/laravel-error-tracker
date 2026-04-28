@@ -51,7 +51,8 @@ class IssueTriggeredNotification extends Notification
     {
         return match ($this->trigger) {
             'new_issue' => 'New error tracker issue detected',
-            'reactivated_issue' => 'Resolved issue has been reactivated',
+            'regression' => 'Error tracker issue regressed',
+            'reactivated' => 'Resolved issue has been reactivated',
             default => 'Error tracker issue notification',
         };
     }

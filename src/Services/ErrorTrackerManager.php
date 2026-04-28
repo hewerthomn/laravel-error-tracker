@@ -107,6 +107,7 @@ class ErrorTrackerManager implements ExceptionRecorder
                 event: $event->fresh(),
                 issueWasCreated: $issueWasCreated,
                 issueWasReactivated: $issueWasReactivated,
+                issueWasRegression: ! $issueWasCreated && ! $issueWasReactivated,
             );
         });
     }

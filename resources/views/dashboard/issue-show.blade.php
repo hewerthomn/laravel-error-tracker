@@ -122,6 +122,34 @@
                     @endif
                 </div>
             @endif
+
+            <div class="panel-soft" style="margin-top: 18px;">
+                <div class="field-group">
+                    <span class="field-label">Last notified at</span>
+                    <div class="muted">
+                        {{ optional($issue->notifications->first()?->sent_at)?->format('d/m/Y H:i:s') ?: '—' }}
+                    </div>
+                </div>
+
+                <div class="field-group" style="margin-top: 12px;">
+                    <span class="field-label">Notification count</span>
+                    <div>{{ number_format($issue->notifications()->count()) }}</div>
+                </div>
+
+                @if ($issue->notifications->isNotEmpty())
+                    <div class="field-group" style="margin-top: 12px;">
+                        <span class="field-label">Recent notifications</span>
+                        <div class="inline-meta">
+                            @foreach ($issue->notifications as $notification)
+                                <span>
+                                    {{ str_replace('_', ' ', $notification->reason) }}
+                                    at {{ optional($notification->sent_at)?->format('d/m/Y H:i') }}
+                                </span>@if(! $loop->last)<span>·</span>@endif
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
         </div>
 
         <div class="card">
