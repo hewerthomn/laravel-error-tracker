@@ -10,6 +10,14 @@ A Laravel-first error tracking package with a built-in dashboard, local
 persistence, issue grouping, notifications, smart stack traces, diagnostics,
 and optional end-user feedback.
 
+## Documentation
+
+Full documentation is available at:
+
+https://hewerthomn.github.io/laravel-error-tracker/
+
+The README contains the quick start. The documentation site contains the full guide.
+
 ## Features
 
 ### Capture and storage
