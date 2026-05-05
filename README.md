@@ -1,7 +1,9 @@
 # Laravel Error Tracker
 
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/hewerthomn/laravel-error-tracker.svg?style=flat-square)](https://packagist.org/packages/hewerthomn/laravel-error-tracker)
+[![Total Downloads](https://img.shields.io/packagist/dt/hewerthomn/laravel-error-tracker.svg?style=flat-square)](https://packagist.org/packages/hewerthomn/laravel-error-tracker)
 [![CI](https://github.com/hewerthomn/laravel-error-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/hewerthomn/laravel-error-tracker/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/packagist/l/hewerthomn/laravel-error-tracker.svg?style=flat-square)](https://packagist.org/packages/hewerthomn/laravel-error-tracker)
 [![PHP](https://img.shields.io/badge/PHP-%5E8.3-777bb4.svg?style=flat-square)](composer.json)
 [![Laravel](https://img.shields.io/badge/Laravel-11%20%7C%2012%20%7C%2013-ff2d20.svg?style=flat-square)](composer.json)
 [![Code Style](https://img.shields.io/badge/code%20style-Laravel%20Pint-2d3748.svg?style=flat-square)](https://laravel.com/docs/pint)
