@@ -2,8 +2,10 @@
 
 namespace Hewerthomn\ErrorTracker\Http\Controllers;
 
+use Hewerthomn\ErrorTracker\Models\ExternalIssue;
 use Hewerthomn\ErrorTracker\Models\Issue;
 use Hewerthomn\ErrorTracker\Services\IssueStatusService;
+use Hewerthomn\ErrorTracker\Support\IssueTrackers\GithubIssueTrackerConfig;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Carbon;
@@ -12,18 +14,27 @@ class IssueController extends Controller
 {
     public function __construct(
         protected IssueStatusService $issueStatusService,
+        protected GithubIssueTrackerConfig $githubIssueTrackerConfig,
     ) {}
 
     public function show(Request $request, Issue $issue)
     {
-        $issue->load([
+        $relations = [
             'lastEvent',
             'events' => fn ($query) => $query->latest('occurred_at')->limit(25),
             'notifications' => fn ($query) => $query->latest('sent_at')->limit(5),
             'trends' => fn ($query) => $query
                 ->where('bucket_granularity', 'hour')
                 ->orderBy('bucket_start'),
-        ]);
+        ];
+
+        $githubIssueIntegrationEnabled = $this->githubIssueTrackerConfig->enabled();
+
+        if ($githubIssueIntegrationEnabled && ExternalIssue::tableExists()) {
+            $relations['externalIssues'] = fn ($query) => $query->latest();
+        }
+
+        $issue->load($relations);
 
         /** @var view-string $view */
         $view = 'error-tracker::dashboard.issue-show';
@@ -34,6 +45,7 @@ class IssueController extends Controller
                 fn ($date) => $date->format('d/m H:i')
             )->values(),
             'trendValues' => $issue->trends->pluck('events_count')->values(),
+            'githubIssueIntegrationEnabled' => $githubIssueIntegrationEnabled,
         ]);
     }
 

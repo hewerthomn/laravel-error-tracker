@@ -24,6 +24,7 @@ class DiagnosticsRunner
             $this->tableCheck('error_tracker_issue_trends', 'Dashboard trends'),
             $this->tableCheck('error_tracker_feedback', 'User feedback'),
             $this->tableCheck('error_tracker_issue_notifications', 'Notification Cooldown'),
+            $this->tableCheck('error_tracker_external_issues', 'External Issues'),
             $this->columnCheck('error_tracker_issues', 'resolved_by_type', 'Auto Resolve metadata'),
             $this->columnCheck('error_tracker_issues', 'resolved_reason', 'Auto Resolve metadata'),
             $this->commandCheck('error-tracker:prune'),
@@ -34,6 +35,9 @@ class DiagnosticsRunner
             $this->configBooleanCheck('auto_resolve', (bool) config('error-tracker.auto_resolve.enabled', false)),
             $this->configBooleanCheck('notifications', (bool) config('error-tracker.notifications.enabled', true)),
             $this->notificationCooldownCheck(),
+            $this->githubIntegrationCheck(),
+            $this->githubRepositoryCheck(),
+            $this->githubTokenCheck(),
             $this->configBooleanCheck('feedback', (bool) config('error-tracker.feedback.enabled', false)),
             $this->configBooleanCheck('error_page', (bool) config('error-tracker.error_page.enabled', true)),
             $this->configBooleanCheck('smart_stacktrace', (bool) config('error-tracker.stacktrace.smart_grouping', true)),
@@ -177,6 +181,58 @@ class DiagnosticsRunner
             description: 'Cooldown: '.$minutes.' minute(s). Max per issue per hour: '.$maxPerHour.'.',
             required: false,
             feature: 'Notification Cooldown',
+        );
+    }
+
+    protected function githubIntegrationCheck(): DiagnosticCheck
+    {
+        $enabled = (bool) config('error-tracker.integrations.issue_trackers.github.enabled', false);
+
+        return new DiagnosticCheck(
+            key: 'config.integrations.issue_trackers.github.enabled',
+            label: 'GitHub issue integration',
+            status: 'info',
+            target: 'error-tracker.integrations.issue_trackers.github.enabled',
+            description: $enabled ? 'GitHub issue integration is enabled.' : 'GitHub issue integration is disabled.',
+            required: false,
+            feature: 'GitHub Issue Integration',
+        );
+    }
+
+    protected function githubRepositoryCheck(): DiagnosticCheck
+    {
+        $repository = trim((string) config('error-tracker.integrations.issue_trackers.github.repository', ''));
+        $configured = $repository !== '';
+        $enabled = (bool) config('error-tracker.integrations.issue_trackers.github.enabled', false);
+
+        return new DiagnosticCheck(
+            key: 'config.integrations.issue_trackers.github.repository',
+            label: 'GitHub repository',
+            status: $configured ? 'ok' : ($enabled ? 'warning' : 'info'),
+            target: 'error-tracker.integrations.issue_trackers.github.repository',
+            description: $configured
+                ? 'GitHub repository is configured.'
+                : 'GitHub repository is not configured.',
+            required: false,
+            feature: 'GitHub Issue Integration',
+        );
+    }
+
+    protected function githubTokenCheck(): DiagnosticCheck
+    {
+        $configured = trim((string) config('error-tracker.integrations.issue_trackers.github.token', '')) !== '';
+        $enabled = (bool) config('error-tracker.integrations.issue_trackers.github.enabled', false);
+
+        return new DiagnosticCheck(
+            key: 'config.integrations.issue_trackers.github.token',
+            label: 'GitHub token',
+            status: $configured ? 'ok' : ($enabled ? 'warning' : 'info'),
+            target: 'error-tracker.integrations.issue_trackers.github.token',
+            description: $configured
+                ? 'GitHub token is configured. The raw token is never shown by diagnostics.'
+                : 'GitHub token is not configured.',
+            required: false,
+            feature: 'GitHub Issue Integration',
         );
     }
 

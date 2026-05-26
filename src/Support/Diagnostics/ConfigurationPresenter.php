@@ -74,6 +74,18 @@ class ConfigurationPresenter
                     $this->configuredRow('Mail recipient', config('error-tracker.notifications.mail_to')),
                     $this->configuredRow('Slack webhook', config('error-tracker.notifications.slack_webhook_url', config('error-tracker.notifications.slack_channel'))),
                 ]),
+                $this->section('GitHub Issue Integration', [
+                    $this->row('Enabled', config('error-tracker.integrations.issue_trackers.github.enabled', false), 'boolean'),
+                    $this->configuredRow('Token', config('error-tracker.integrations.issue_trackers.github.token')),
+                    $this->row('Repository', config('error-tracker.integrations.issue_trackers.github.repository', '')),
+                    $this->row('Labels', $this->listValue(config('error-tracker.integrations.issue_trackers.github.labels', [])), 'list'),
+                    $this->row('Assignees', $this->listValue(config('error-tracker.integrations.issue_trackers.github.assignees', [])), 'list'),
+                    $this->row('Title template', config('error-tracker.integrations.issue_trackers.github.title_template', '')),
+                    $this->row('Include stack trace', config('error-tracker.integrations.issue_trackers.github.include_stack_trace', true), 'boolean'),
+                    $this->row('Max stack frames', config('error-tracker.integrations.issue_trackers.github.max_stack_frames', 15)),
+                    $this->row('Include context', config('error-tracker.integrations.issue_trackers.github.include_context', false), 'boolean'),
+                    $this->row('Include source context', config('error-tracker.integrations.issue_trackers.github.include_source_context', false), 'boolean'),
+                ]),
                 $this->section('Retention', [
                     $this->row('Events days', config('error-tracker.retention.events_days', 30)),
                     $this->row('Resolved issues days', config('error-tracker.retention.resolved_issues_days', 90)),
