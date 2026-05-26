@@ -49,6 +49,14 @@
         return (int) ($trendBuckets->get($bucketKey)?->events_count ?? 0);
     });
     $trendMax = $trendValues->max();
+    $githubIssueIntegrationEnabled = $githubIssueIntegrationEnabled ?? false;
+    $externalIssues = $githubIssueIntegrationEnabled && $issue->relationLoaded('externalIssues')
+        ? $issue->externalIssues
+        : collect();
+
+    $githubExternalIssue = $externalIssues
+        ->where('provider', 'github')
+        ->first();
 @endphp
 
 <article class="issue-card-item">
@@ -65,6 +73,18 @@
 
             @if ($resolvedByLabel)
                 <span>{{ $resolvedByLabel }}</span>
+            @endif
+
+            @if ($githubExternalIssue)
+                <a
+                    href="{{ $githubExternalIssue->url }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="badge badge-neutral"
+                    title="{{ $githubExternalIssue->repository }}#{{ $githubExternalIssue->external_number }}"
+                >
+                    GH #{{ $githubExternalIssue->external_number }}
+                </a>
             @endif
         </div>
 

@@ -3,6 +3,7 @@
 use Hewerthomn\ErrorTracker\Http\Controllers\ConfigurationController;
 use Hewerthomn\ErrorTracker\Http\Controllers\DashboardController;
 use Hewerthomn\ErrorTracker\Http\Controllers\EventController;
+use Hewerthomn\ErrorTracker\Http\Controllers\ExternalIssueController;
 use Hewerthomn\ErrorTracker\Http\Controllers\FeedbackController;
 use Hewerthomn\ErrorTracker\Http\Controllers\IssueController;
 use Illuminate\Support\Facades\Route;
@@ -35,4 +36,9 @@ Route::middleware(array_merge($middleware, ["can:{$gate}"]))
         Route::post('/issues/{issue}/ignore', [IssueController::class, 'ignore'])->name('issues.ignore');
         Route::post('/issues/{issue}/mute', [IssueController::class, 'mute'])->name('issues.mute');
         Route::post('/issues/{issue}/unmute', [IssueController::class, 'unmute'])->name('issues.unmute');
+
+        Route::post('/issues/{issue}/external-issues/github', [ExternalIssueController::class, 'createGithub'])->name('issues.external-issues.github.store');
+        Route::post('/issues/{issue}/external-issues/link', [ExternalIssueController::class, 'link'])->name('issues.external-issues.link');
+        Route::post('/issues/{issue}/external-issues/{externalIssue}/sync', [ExternalIssueController::class, 'sync'])->name('issues.external-issues.sync');
+        Route::delete('/issues/{issue}/external-issues/{externalIssue}', [ExternalIssueController::class, 'destroy'])->name('issues.external-issues.destroy');
     });
