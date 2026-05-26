@@ -1,0 +1,42 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('error_tracker_external_issues', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('issue_id')
+                ->constrained('error_tracker_issues')
+                ->cascadeOnDelete();
+
+            $table->string('provider', 64);
+            $table->string('repository', 191);
+            $table->string('external_id', 191)->nullable();
+            $table->unsignedBigInteger('external_number');
+            $table->string('title');
+            $table->text('url');
+            $table->string('state', 32)->nullable();
+            $table->unsignedBigInteger('created_from_event_id')->nullable();
+            $table->json('metadata_json')->nullable();
+            $table->timestamp('last_synced_at')->nullable();
+
+            $table->timestamps();
+
+            $table->index('issue_id', 'et_external_issues_issue_id_idx');
+            $table->index('provider', 'et_external_issues_provider_idx');
+            $table->index('repository', 'et_external_issues_repository_idx');
+            $table->index(['provider', 'repository', 'external_number'], 'et_external_issues_provider_repo_number_idx');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('error_tracker_external_issues');
+    }
+};

@@ -230,6 +230,31 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Integrations
+    |--------------------------------------------------------------------------
+    |
+    | External issue tracker integrations are optional and disabled by default.
+    |
+    */
+    'integrations' => [
+        'issue_trackers' => [
+            'github' => [
+                'enabled' => env('ERROR_TRACKER_GITHUB_ENABLED', false),
+                'token' => env('ERROR_TRACKER_GITHUB_TOKEN'),
+                'repository' => env('ERROR_TRACKER_GITHUB_REPOSITORY'),
+                'labels' => array_values(array_filter(array_map('trim', explode(',', env('ERROR_TRACKER_GITHUB_LABELS', 'bug,error-tracker'))))),
+                'assignees' => array_values(array_filter(array_map('trim', explode(',', env('ERROR_TRACKER_GITHUB_ASSIGNEES', ''))))),
+                'title_template' => env('ERROR_TRACKER_GITHUB_TITLE_TEMPLATE', '[{environment}] {exception_class} in {location}'),
+                'include_stack_trace' => env('ERROR_TRACKER_GITHUB_INCLUDE_STACK_TRACE', true),
+                'max_stack_frames' => env('ERROR_TRACKER_GITHUB_MAX_STACK_FRAMES', 15),
+                'include_context' => env('ERROR_TRACKER_GITHUB_INCLUDE_CONTEXT', false),
+                'include_source_context' => env('ERROR_TRACKER_GITHUB_INCLUDE_SOURCE_CONTEXT', false),
+            ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Custom error page
     |--------------------------------------------------------------------------
     */
