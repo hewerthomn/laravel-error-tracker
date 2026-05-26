@@ -2,6 +2,17 @@
 
 All notable changes to laravel-error-tracker will be documented in this file.
 
+## [1.1.0] - Unreleased
+
+### Added
+
+- GitHub Issue Integration.
+- Create GitHub issues from internal Error Tracker issues.
+- Link existing GitHub issues by URL, `owner/repository#number`, `#number`, or bare number.
+- Manual refresh from GitHub for linked issue title, state, URL, and metadata.
+- Unlink support that removes only the local external issue association.
+- Generic external issue persistence for future providers.
+
 ## [1.0.0] - 2026-04-28
 
 ### Added

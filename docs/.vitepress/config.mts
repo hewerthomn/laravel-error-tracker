@@ -31,6 +31,7 @@ export default defineConfig({
           { text: 'Smart Stack Trace', link: '/smart-stack-trace' },
           { text: 'Feedback', link: '/feedback' },
           { text: 'Notifications', link: '/notifications' },
+          { text: 'GitHub Issue Integration', link: '/github-issue-integration' },
           { text: 'Auto Resolve', link: '/auto-resolve' },
         ],
       },

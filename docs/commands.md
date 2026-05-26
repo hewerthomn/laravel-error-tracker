@@ -34,6 +34,12 @@ php artisan error-tracker:doctor
 
 Runs installation and configuration diagnostics.
 
+The checks include core tables, optional feature tables such as
+`error_tracker_external_issues`, command registration, configuration cache
+state, notification settings, and GitHub Issue Integration configuration. It
+does not call the GitHub API by default, and tokens are reported only as
+`configured` or `not configured`.
+
 ```bash
 php artisan error-tracker:doctor --json
 ```

@@ -29,6 +29,7 @@ Important options include:
 - `stacktrace.store_absolute_paths`
 - `stacktrace.source_context`
 - `stacktrace.store_arguments`
+- `integrations.issue_trackers.github`
 
 ## Shared Database / Multi-App Setup
 
@@ -45,3 +46,23 @@ storage.
 
 In that setup, keeping `environment` visible in the dashboard and optionally
 including it in the fingerprint becomes more useful.
+
+## GitHub Issue Integration
+
+GitHub issue linking is disabled by default.
+
+| Environment variable | Config key | Default |
+| --- | --- | --- |
+| `ERROR_TRACKER_GITHUB_ENABLED` | `integrations.issue_trackers.github.enabled` | `false` |
+| `ERROR_TRACKER_GITHUB_TOKEN` | `integrations.issue_trackers.github.token` | empty |
+| `ERROR_TRACKER_GITHUB_REPOSITORY` | `integrations.issue_trackers.github.repository` | empty |
+| `ERROR_TRACKER_GITHUB_LABELS` | `integrations.issue_trackers.github.labels` | `bug,error-tracker` |
+| `ERROR_TRACKER_GITHUB_ASSIGNEES` | `integrations.issue_trackers.github.assignees` | empty |
+| `ERROR_TRACKER_GITHUB_TITLE_TEMPLATE` | `integrations.issue_trackers.github.title_template` | `[{environment}] {exception_class} in {location}` |
+| `ERROR_TRACKER_GITHUB_INCLUDE_STACK_TRACE` | `integrations.issue_trackers.github.include_stack_trace` | `true` |
+| `ERROR_TRACKER_GITHUB_MAX_STACK_FRAMES` | `integrations.issue_trackers.github.max_stack_frames` | `15` |
+| `ERROR_TRACKER_GITHUB_INCLUDE_CONTEXT` | `integrations.issue_trackers.github.include_context` | `false` |
+| `ERROR_TRACKER_GITHUB_INCLUDE_SOURCE_CONTEXT` | `integrations.issue_trackers.github.include_source_context` | `false` |
+
+`ERROR_TRACKER_GITHUB_TOKEN` is displayed only as `configured` or
+`not configured` in diagnostics.
