@@ -2,16 +2,29 @@
 
 All notable changes to laravel-error-tracker will be documented in this file.
 
-## [1.1.0] - Unreleased
+## [Unreleased]
+
+## [1.1.0] - 2026-05-26
 
 ### Added
 
 - GitHub Issue Integration.
 - Create GitHub issues from internal Error Tracker issues.
 - Link existing GitHub issues by URL, `owner/repository#number`, `#number`, or bare number.
-- Manual refresh from GitHub for linked issue title, state, URL, and metadata.
+- Refresh linked GitHub issue title, state, URL, and metadata from GitHub.
 - Unlink support that removes only the local external issue association.
 - Generic external issue persistence for future providers.
+- Dashboard UI for linked and unlinked external issues.
+- GitHub integration configuration and diagnostics.
+- Documentation for GitHub Issue Integration.
+
+## [1.0.1] - 2026-05-05
+
+### Fixed
+
+- Added explicit read-only `GITHUB_TOKEN` permissions to the CI workflow.
+- Resolved Dependabot alerts for Vite and esbuild used by the VitePress documentation build.
+- Added npm overrides for Vite and esbuild while keeping the public PHP API unchanged.
 
 ## [1.0.0] - 2026-04-28
 
@@ -30,8 +43,6 @@ All notable changes to laravel-error-tracker will be documented in this file.
 - `error-tracker:demo`.
 - Guided installer.
 - VitePress documentation.
-
-## Unreleased
 
 ### Added
 
