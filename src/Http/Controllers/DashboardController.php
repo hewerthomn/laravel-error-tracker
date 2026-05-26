@@ -2,30 +2,44 @@
 
 namespace Hewerthomn\ErrorTracker\Http\Controllers;
 
+use Hewerthomn\ErrorTracker\Models\ExternalIssue;
 use Hewerthomn\ErrorTracker\Models\Issue;
 use Hewerthomn\ErrorTracker\Support\Dashboard\IssueSearchParser;
 use Hewerthomn\ErrorTracker\Support\Dashboard\IssueSearchQuery;
 use Hewerthomn\ErrorTracker\Support\Dashboard\QueryStringBuilder;
+use Hewerthomn\ErrorTracker\Support\IssueTrackers\GithubIssueTrackerConfig;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request, IssueSearchParser $searchParser, IssueSearchQuery $issueSearchQuery)
-    {
+    public function index(
+        Request $request,
+        IssueSearchParser $searchParser,
+        IssueSearchQuery $issueSearchQuery,
+        GithubIssueTrackerConfig $githubIssueTrackerConfig,
+    ) {
         $queryText = $request->query->has('q')
             ? $request->string('q')->toString()
             : $request->string('search')->toString();
         $search = $searchParser->parse($queryText, $request->query());
 
+        $relations = [
+            'lastEvent',
+            'trends' => fn ($query) => $query
+                ->where('bucket_granularity', 'hour')
+                ->where('bucket_start', '>=', now()->subDay()->startOfHour())
+                ->orderBy('bucket_start'),
+        ];
+
+        $githubIssueIntegrationEnabled = $githubIssueTrackerConfig->enabled();
+
+        if ($githubIssueIntegrationEnabled && ExternalIssue::tableExists()) {
+            $relations[] = 'externalIssues';
+        }
+
         $query = Issue::query()
-            ->with([
-                'lastEvent',
-                'trends' => fn ($query) => $query
-                    ->where('bucket_granularity', 'hour')
-                    ->where('bucket_start', '>=', now()->subDay()->startOfHour())
-                    ->orderBy('bucket_start'),
-            ]);
+            ->with($relations);
 
         $issueSearchQuery->apply($query, $search);
         $issueSearchQuery->sort($query, $search);
@@ -114,6 +128,7 @@ class DashboardController extends Controller
                 : 'Current environment',
             'canFilterEnvironment' => $hasMultipleEnvironments && $this->shouldShowEnvironmentFilter($hasMultipleEnvironments),
             'showEnvironmentBadge' => $this->shouldShowEnvironmentBadge($hasMultipleEnvironments),
+            'githubIssueIntegrationEnabled' => $githubIssueIntegrationEnabled,
         ]);
     }
 

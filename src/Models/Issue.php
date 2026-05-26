@@ -33,6 +33,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Event|null $lastEvent
  * @property-read Collection<int, Event> $events
+ * @property-read Collection<int, ExternalIssue> $externalIssues
  * @property-read Collection<int, IssueNotification> $notifications
  * @property-read Collection<int, IssueTrend> $trends
  */
@@ -87,6 +88,14 @@ class Issue extends Model
     public function notifications(): HasMany
     {
         return $this->hasMany(IssueNotification::class, 'issue_id');
+    }
+
+    /**
+     * @return HasMany<ExternalIssue, $this>
+     */
+    public function externalIssues(): HasMany
+    {
+        return $this->hasMany(ExternalIssue::class, 'issue_id');
     }
 
     /**

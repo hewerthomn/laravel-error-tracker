@@ -41,11 +41,28 @@ The README contains the quick start. The documentation site contains the full gu
 
 - Resolve, reopen, ignore, mute, and unmute issues.
 - Optional auto resolve for stale open issues.
+- Optional GitHub Issue Integration to create, link, refresh, and unlink GitHub issues.
 
 ### Notifications
 
 - Mail and Slack notifications for new and reactivated issues.
 - Optional notification cooldown to reduce noisy alerts.
+
+### GitHub Issue Integration
+
+GitHub issue links are optional and disabled by default. Configure a token with
+Issues read/write access and a default repository:
+
+```env
+ERROR_TRACKER_GITHUB_ENABLED=false
+ERROR_TRACKER_GITHUB_TOKEN=
+ERROR_TRACKER_GITHUB_REPOSITORY=owner/repository
+ERROR_TRACKER_GITHUB_LABELS=bug,error-tracker
+```
+
+When enabled, the issue detail page can create a GitHub issue or link an
+existing one, then refresh status from GitHub or unlink the local association. See the
+[full GitHub Issue Integration guide](docs/github-issue-integration.md).
 
 ### Feedback and error page
 

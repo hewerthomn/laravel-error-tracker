@@ -43,6 +43,22 @@
                 default => null,
             }
             : null;
+
+        $githubIssueIntegrationEnabled = $githubIssueIntegrationEnabled ?? false;
+        $externalIssues = $githubIssueIntegrationEnabled && $issue->relationLoaded('externalIssues')
+            ? $issue->externalIssues
+            : collect();
+
+        $githubExternalIssue = $externalIssues
+            ->where('provider', 'github')
+            ->first();
+
+        $githubExternalIssueState = strtolower((string) ($githubExternalIssue?->state ?: 'unknown'));
+        $githubExternalIssueStateClass = match ($githubExternalIssueState) {
+            'open' => 'badge-success',
+            'closed' => 'badge-muted',
+            default => 'badge-neutral',
+        };
     @endphp
 
     @include('error-tracker::partials.page-header', [
@@ -160,6 +176,110 @@
             <canvas id="issueTrendChart" height="120"></canvas>
         </div>
     </div>
+
+    @if ($githubIssueIntegrationEnabled)
+        <div class="card">
+            @if ($githubExternalIssue)
+                <div class="external-issue-header">
+                    <div class="external-issue-title-group">
+                        <div class="external-issue-heading-row">
+                            <h2 class="card-title">External issue</h2>
+                            <span class="external-issue-github-line">
+                                <span>GitHub #{{ $githubExternalIssue->external_number }}</span>
+                                <span class="badge {{ $githubExternalIssueStateClass }}">{{ $githubExternalIssueState }}</span>
+                                <a
+                                    href="{{ $githubExternalIssue->url }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="btn btn-outline external-issue-open-link"
+                                    title="{{ $githubExternalIssue->repository }}#{{ $githubExternalIssue->external_number }}"
+                                >
+                                    Open on GitHub
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="inline-actions external-issue-actions">
+                        <form method="POST" action="{{ route('error-tracker.issues.external-issues.sync', [$issue, $githubExternalIssue]) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-outline">Refresh from GitHub</button>
+                        </form>
+
+                        <form
+                            method="POST"
+                            action="{{ route('error-tracker.issues.external-issues.destroy', [$issue, $githubExternalIssue]) }}"
+                            onsubmit="return confirm('Unlink this GitHub issue? This will only remove the local association. The GitHub issue will not be changed.')"
+                        >
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-outline">Unlink</button>
+                        </form>
+                    </div>
+                </div>
+
+                <table class="refined-table external-issue-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Last synced</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="table-cell-title">{{ $githubExternalIssue->title }}</div>
+                            </td>
+                            <td>
+                                <div class="table-cell-title">
+                                    {{ optional($githubExternalIssue->last_synced_at)?->format('d/m/Y H:i:s') ?: '—' }}
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            @else
+                <div class="external-issue-header">
+                    <h2 class="card-title">External issue</h2>
+                    <span class="badge badge-neutral">GitHub not linked</span>
+                </div>
+
+                <div class="external-issue-unlinked-grid">
+                    <form method="POST" action="{{ route('error-tracker.issues.external-issues.github.store', $issue) }}" class="external-issue-create-panel">
+                        @csrf
+
+                        <div>
+                            <div class="field-label">Create GitHub issue</div>
+                            <div class="field-help" style="margin-top: 6px;">
+                                Creates one issue in the configured repository and links it here.
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-purple">Create GitHub issue</button>
+                    </form>
+
+                    <form method="POST" action="{{ route('error-tracker.issues.external-issues.link', $issue) }}" class="external-issue-link-panel">
+                        @csrf
+
+                        <div class="field-group">
+                            <label for="external_issue" class="field-label">Link existing issue</label>
+                            <div class="external-issue-link-row">
+                                <input
+                                    id="external_issue"
+                                    type="text"
+                                    name="external_issue"
+                                    placeholder="https://github.com/owner/repository/issues/123"
+                                    value="{{ old('external_issue') }}"
+                                >
+                                <button type="submit" class="btn btn-outline">Link issue</button>
+                            </div>
+                            <div class="field-help">Accepted: GitHub issue URL, owner/repository#123, #123, or 123.</div>
+                        </div>
+                    </form>
+                </div>
+            @endif
+        </div>
+    @endif
 
     <div class="card">
         <div class="card-header">

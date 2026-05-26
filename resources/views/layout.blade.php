@@ -378,6 +378,68 @@
             color: var(--muted);
         }
 
+        .external-issue-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .external-issue-heading-row,
+        .external-issue-github-line {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .external-issue-title-group {
+            min-width: 0;
+        }
+
+        .external-issue-open-link {
+            min-height: 34px;
+            padding: 8px 12px;
+        }
+
+        .external-issue-actions {
+            justify-content: flex-end;
+        }
+
+        .external-issue-table {
+            margin-top: 4px;
+        }
+
+        .external-issue-unlinked-grid {
+            display: grid;
+            grid-template-columns: minmax(260px, 0.9fr) minmax(340px, 1.1fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .external-issue-create-panel,
+        .external-issue-link-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .external-issue-link-row {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .external-issue-link-row input {
+            min-width: 0;
+        }
+
+        .external-issue-link-row .btn {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
         .status-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(180px, 1fr));
@@ -501,6 +563,19 @@
 
             .inline-actions .btn {
                 justify-content: center;
+            }
+
+            .external-issue-header,
+            .external-issue-unlinked-grid,
+            .external-issue-link-row {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .external-issue-actions,
+            .external-issue-actions form,
+            .external-issue-link-row .btn {
+                width: 100%;
             }
         }
         .filters-card {
