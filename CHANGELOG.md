@@ -4,6 +4,14 @@ All notable changes to laravel-error-tracker will be documented in this file.
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-05-28
+
+### Fixed
+
+- Updated the Vite documentation dependency override to address recent Vite security advisories.
+- Resolved Dependabot alerts for Vite `server.fs.deny` bypass on Windows alternate paths.
+- Resolved Dependabot alert for `launch-editor` UNC path handling through the patched Vite version.
+
 ## [1.1.0] - 2026-05-26
 
 ### Added
